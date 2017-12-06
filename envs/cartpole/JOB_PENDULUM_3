@@ -1,7 +1,0 @@
-#!/bin/bash
-#
-#SBATCH --job-name=pendulum_dnn_3
-#SBATCH --output=pendulum_dnn_3.txt
-#SBATCH --time=120:00
-#SBATCH --mem=8000
-srun python run_pendulum.py -c CONFIG_PENDULUM_3 -e 100 -f 10
