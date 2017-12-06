@@ -1,2 +1,2 @@
-# mrli
-Montefiore Reinforcement Learning Interface (mrli)
+# mdrli
+Montefiore Deep Reinforcement Learning Interface (mdrli)
