@@ -1,0 +1,4 @@
+help=If clip_delta strictly positive, \"the squared loss is linear past the clip point which keeps the gradient constant\" (from deer specification).
+type=float
+default=0
+dest=clip_delta

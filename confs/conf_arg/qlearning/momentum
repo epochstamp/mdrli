@@ -1,0 +1,4 @@
+help=Momentum for neural network training (Increase size of learning step to try avoiding local minima).
+type=float
+default=0
+dest=momentum

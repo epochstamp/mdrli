@@ -1,0 +1,4 @@
+help=Maximum number of episode step during an epoch. 0 is equivalent to batch mode rl
+default=0
+type=int
+dest=max_steps_on_epoch

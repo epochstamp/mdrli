@@ -1,0 +1,4 @@
+help=Random number generator seed. Chosen randomly when empty.
+type=int
+default=-1
+dest=rng

@@ -1,0 +1,3 @@
+help=Prefix of output file
+dest=out_prefix
+default=""

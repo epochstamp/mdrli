@@ -1,0 +1,4 @@
+help=Number of episodes to play. Usage may varies between runners.
+default=1000
+type=int
+dest=n_episodes

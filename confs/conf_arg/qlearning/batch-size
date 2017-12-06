@@ -1,0 +1,4 @@
+help=Batch size for neural network training
+type=int
+default=32
+dest=batch_size

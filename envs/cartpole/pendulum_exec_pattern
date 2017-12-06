@@ -1,0 +1,1 @@
+python generate_tuples_pendulum.py -c CONFIG_PENDULUM_:i:
