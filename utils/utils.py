@@ -1,6 +1,7 @@
 import hashlib
 import sys
 from configobj import ConfigObj
+from validate import Validator
 from joblib import load,dump
 import os
 
@@ -42,5 +43,11 @@ def dump_dump(dumptype,module,name,value):
 
     
 def parse_conf(conf_file):
-    params = ConfigObj(conf_file)
+    directory = os.path.dirname(conf_file)
+    validator = Validator()
+    try:
+        params = ConfigObj(conf_file, directory + "/validator")
+        params.validate(validator, copy=True)
+    except:
+        params = ConfigObj(conf_file)
     return params

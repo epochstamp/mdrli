@@ -1,3 +1,0 @@
-help=Update rule, either `rmsprop` or `sgd`.
-default=rmsprop
-dest=update_rule

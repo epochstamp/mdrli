@@ -39,8 +39,12 @@ class Qlearning(RunInterface):
     
         conf_env_dir = "confs/conf_env/" + self.params.env_module + "/" + self.params.env_conf_file
         conf_pol_dir = "confs/conf_pol/" + self.params.pol_module + "/" + self.params.pol_conf_file
+        conf_ctrl_neural_nets_dir = "confs/conf_ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
+        conf_backend_nnet_dir = "confs/conf_backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
         env_params = parse_conf(conf_env_dir)
         pol_params = parse_conf(conf_pol_dir)
+        ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
+        backend_nnet_params = parse_conf(conf_backend_nnet_dir)
         env = get_mod_object("envs",self.params.env_module,"env",rng, env_params)
         pol = get_mod_object("pols",self.params.pol_module,"pol",rng, pol_params)
         env.reset()
@@ -56,9 +60,13 @@ class Qlearning(RunInterface):
                 dataset = load("data/" + self.params.env_module + "/" + data + ".data")
 
         
-
-        neural_net_class = get_mod_class("neural_nets", self.params.backend_nnet,"neural_net")
-        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", env, self.params.rho, self.params.rms_epsilon, self.params.momentum, self.params.clip_delta, self.params.freeze_interval, self.params.batch_size, self.params.update_rule, rng, self.params.double_q, neural_net_class)
+        backend_nnet_params["input_dimensions"] = env.inputDimensions()
+        backend_nnet_params["n_actions"] = env.nActions()
+        backend_nnet_params["random_state"] = rng
+        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", **backend_nnet_params)
+        ctrl_neural_nets_params["random_state"] = rng
+        ctrl_neural_nets_params["neural_network"] = neural_net
+        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", env, **ctrl_neural_nets_params)
         if self.params.warmstart != "none":
                 try:
                         ctrl_neural_net.setAllParams("dumps/neural_nets_params/" + str(self.params.qnetw_module) + "/" + self.params.warmstart + ".params")

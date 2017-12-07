@@ -1,3 +1,0 @@
-help=Activate Double-Q training (see following paper : Hado van Hasselt et al. (2015) - Deep Reinforcement Learning with Double Q-learning.)
-action=store_true
-dest=double_q

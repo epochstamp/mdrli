@@ -55,8 +55,10 @@ class Ctrl_deerfault(QNetwork):
         self._double_Q = double_Q
         self._random_state = random_state
         self.update_counter = 0
-                
-        Q_net = neural_network(self._batch_size, self._input_dimensions, self._n_actions, self._random_state)
+        try:   
+                Q_net = neural_network(self._batch_size, self._input_dimensions, self._n_actions, self._random_state)
+        except:
+                Q_net = neural_network
         self.q_vals, self.params = Q_net._buildDQN()
         
         if update_rule == 'deepmind_rmsprop':

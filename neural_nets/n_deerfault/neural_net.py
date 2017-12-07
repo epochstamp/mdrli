@@ -21,7 +21,7 @@ class N_deerfault():
     action_as_input : Boolean
         Whether the action is given as input or as output
     """
-    def __init__(self, batch_size, input_dimensions, n_actions, random_state, action_as_input=False):
+    def __init__(self, batch_size=32, input_dimensions=[], n_actions=2, random_state=np.random.RandomState(), action_as_input=False):
         self._input_dimensions=input_dimensions
         self._batch_size=batch_size
         self._random_state=random_state

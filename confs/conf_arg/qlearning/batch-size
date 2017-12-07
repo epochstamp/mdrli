@@ -1,4 +1,4 @@
-help=Batch size for neural network training
+help=Batch size for qlearning training phase
 type=int
 default=32
 dest=batch_size

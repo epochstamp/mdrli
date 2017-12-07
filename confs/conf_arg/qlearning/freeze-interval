@@ -1,4 +1,0 @@
-help=\"Period during which the target network is freezed and after which the target network is updated\" (from deer specification).
-type=int
-default=1000
-dest=freeze_interval
