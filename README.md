@@ -1,7 +1,7 @@
 # Montefiore Deep Reinforcement Learning Interface (mdrli)
 ## Overview
 
-MDRLI is an interface built on top of a fork based on [DeeR][(https://github.com/VinF/deer/)]. It is a plugin based-system for which you can use (already existing or provided by your own) environments and deep reinforcement learning techniques (including transfer) together very easily from data generation to learning and test.
+MDRLI is an interface built on top of a fork based on [DeeR](https://github.com/VinF/deer/). It is a plugin based-system for which you can use (already existing or provided by your own) environments and deep reinforcement learning techniques (including transfer) together very easily from data generation to learning and test.
 
 ## Dependencies
 
