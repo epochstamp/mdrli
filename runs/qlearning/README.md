@@ -1,3 +1,3 @@
-  # Qlearning
+# Qlearning
   
-     Batch-mode or online reinforcement learning using q-networks.
+Batch-mode or online reinforcement learning using q-networks.
