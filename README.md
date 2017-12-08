@@ -35,7 +35,7 @@ Any argument to be provided to `my_run` always carries the prefix `--my-run-`.
 
   Available common command-line arguments are listed below.
   - `env-module` : Module from which environment class (inherited from [Environment](https://github.com/VinF/deer/blob/master/deer/base_classes/Environment.py) is imported. Name of the class is required to match `env-module` with first letter capitalized.
-  - `env-conf-file` : Configuration file provided to environment object imported from `env-module`. See [ConfigObj](http://configobj.readthedocs.io/en/latest/configobj.html)]documentation for full specs
+  - `env-conf-file` : Configuration file provided to environment object imported from `env-module`. See [ConfigObj](http://configobj.readthedocs.io/en/latest/configobj.html) documentation for full specs
   - `max-size-episode` : Maximum size of an episode (related to reinforcement learning)
   - `n-episodes` : Number of episodes to play (related to reinforcement learning)
   - `out-prefix` : Prefix of output file encoded based on command line arguments.
