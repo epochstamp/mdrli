@@ -1,0 +1,15 @@
+[verboseController]
+    evaluateOn=False
+    evaluate_on=epoch
+    periodicity=1
+
+[trainerController]
+    evaluate_on=action
+    show_episode_avg_V_value=True
+    show_avg_Bellman_residual=True
+
+[learningRateController]
+    periodicity=1
+
+[discountFactorController]
+    periodicity=1

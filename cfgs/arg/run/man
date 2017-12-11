@@ -1,0 +1,3 @@
+help="Display help for subrun(s)"
+dest=man
+action=store_true

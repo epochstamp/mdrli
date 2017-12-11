@@ -1,0 +1,3 @@
+help=Environment module(s). Each module `env_module` from env_modules is located at envs/`env_module`/env.py and has to encapsulate a class for which the name has to be `env_module` with first capitalized letter (e.g. Foo will be extracted from envs/foo/env.py)
+required=True
+dest=env_module

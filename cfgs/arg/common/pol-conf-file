@@ -1,0 +1,3 @@
+help=Configuration file for `pol-module`
+default=DEFAULT
+dest=pol_conf_file

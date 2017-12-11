@@ -1,0 +1,3 @@
+help=Configuration file for neural network controller.
+default=DEFAULT
+dest=ctrl_conf_file
