@@ -3,7 +3,10 @@ import sys
 from configobj import ConfigObj
 from validate import Validator
 from joblib import load,dump
+import importlib
 import os
+import inspect
+import shutil
 
 def capitalizeFirstLetter(s):
     return s[0].upper() + s[1:]
@@ -16,6 +19,17 @@ def md5_file(fname):
     return hash_md5.hexdigest()
 
 
+def list_classes_module_with_parent(modulefile,parent):
+        cls = []
+        module = importlib.import_module(modulefile.replace("/",".").replace(".py",""))
+        def isparent(c):
+                try:
+                        return c != parent and issubclass(c, parent)
+                except:
+                        return False
+        for name, obj in inspect.getmembers(module, isparent):
+            cls.append(name)
+        return cls
 
 def get_mod_object(folder,module,modtype,*args,**kwargs):
     mod = __import__(folder + "." + module + "." + modtype, fromlist=[capitalizeFirstLetter(module)])
@@ -51,3 +65,13 @@ def parse_conf(conf_file):
     except:
         params = ConfigObj(conf_file)
     return params
+
+def copy_rename(old_file_name, new_file_name):
+        src_dir= os.curdir
+        dst_dir= os.path.join(os.curdir , "")
+        src_file = os.path.join(src_dir, old_file_name)
+        shutil.copy(src_file,dst_dir)
+        
+        dst_file = os.path.join(dst_dir, old_file_name)
+        new_dst_file_name = os.path.join(dst_dir, new_file_name)
+        os.rename(dst_file, new_dst_file_name)
