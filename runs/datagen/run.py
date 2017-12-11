@@ -33,9 +33,9 @@ class Datagen(RunInterface):
         rng = np.random.RandomState(seed)
 
         conf_env_file = self.params.env_conf_file
-        conf_env_dir = "confs/conf_env/" + self.params.env_module + "/" + conf_env_file
+        conf_env_dir = "cfgs/env/" + self.params.env_module + "/" + conf_env_file
         conf_pol_file = self.params.pol_conf_file
-        conf_pol_dir = "confs/conf_pol/" + self.params.pol_module + "/" + conf_pol_file
+        conf_pol_dir = "cfgs/pol/" + self.params.pol_module + "/" + conf_pol_file
         env_params = parse_conf(conf_env_dir)
         pol_params = parse_conf(conf_pol_dir)
         env = get_mod_object("envs",self.params.env_module,"env",rng, env_params)

@@ -37,10 +37,10 @@ class Qlearning(RunInterface):
                 seed = int(self.params.rng)
         rng = np.random.RandomState(seed)
     
-        conf_env_dir = "confs/conf_env/" + self.params.env_module + "/" + self.params.env_conf_file
-        conf_pol_dir = "confs/conf_pol/" + self.params.pol_module + "/" + self.params.pol_conf_file
-        conf_ctrl_neural_nets_dir = "confs/conf_ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
-        conf_backend_nnet_dir = "confs/conf_backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
+        conf_env_dir = "cfgs/env/" + self.params.env_module + "/" + self.params.env_conf_file
+        conf_pol_dir = "cfgs/pol/" + self.params.pol_module + "/" + self.params.pol_conf_file
+        conf_ctrl_neural_nets_dir = "cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
+        conf_backend_nnet_dir = "cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
         env_params = parse_conf(conf_env_dir)
         pol_params = parse_conf(conf_pol_dir)
         ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
@@ -88,7 +88,7 @@ class Qlearning(RunInterface):
         
 
         
-        cfg_ctrls = parse_conf("confs/conf_ctrl/" + self.params.acontroller_cfg)
+        cfg_ctrls = parse_conf("cfgs/ctrl/" + self.params.acontroller_cfg)
         for k,v in cfg_ctrls.items():
                 controller = get_mod_object("ctrls",k,"ctrl",*v)
                 agent.attach(controller)

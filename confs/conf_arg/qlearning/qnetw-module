@@ -1,3 +1,0 @@
-help=Neural network controller module
-default=ctrl_deerfault
-dest=qnetw_module

@@ -1,3 +1,0 @@
-help=Configuration file for controllers to attach to the agent
-default=DEFAULT
-dest=acontroller_cfg

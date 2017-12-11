@@ -1,4 +1,0 @@
-help=Number of q-network learning epochs to perform
-type=int
-dest=epochs
-default=10

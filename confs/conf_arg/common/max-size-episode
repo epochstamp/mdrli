@@ -1,4 +1,0 @@
-help=Maximum size of each episode. Usage varies between runners.
-type=int
-default=50
-dest=max_size_episode

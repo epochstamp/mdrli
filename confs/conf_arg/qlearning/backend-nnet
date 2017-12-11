@@ -1,3 +1,0 @@
-help=Neural network backend binded to neural network controller
-default=n_deerfault
-dest=backend_nnet

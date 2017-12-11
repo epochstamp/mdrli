@@ -19,7 +19,7 @@ class RunInterface(object):
 
     def common_args(self,p):
        for c in self.lst_common:
-           d = parse_conf("confs/conf_arg/common/"+c)
+           d = parse_conf("cfgs/arg/common/"+c)
            try:
                 if d["type"] == "int":
                     d["type"] = int
@@ -30,7 +30,7 @@ class RunInterface(object):
            p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
        
     def args(self,p):
-       path = "confs/conf_arg/" + self.__class__.__name__.lower() + "/"
+       path = "cfgs/arg/" + self.__class__.__name__.lower() + "/"
        commands = [f for f in listdir(path) if isfile(join(path, f))]
        for c in commands:
            d = parse_conf(path+c)
