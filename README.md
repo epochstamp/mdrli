@@ -29,6 +29,9 @@ You will need the following dependencies :
 python run.py --runs-run `my_run` [`my_runs` ...]
 ```
 
+To display help for each `my_run`, add argument --runs-man to the previous call.
+
+
 Any argument to be provided to `my_run` always carries the prefix `--my-run-`.
 
 ## Common Arguments
