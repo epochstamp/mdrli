@@ -26,8 +26,7 @@ class RunInterface(object):
                 elif d["type"] == "float":
                     d["type"] = float
            except:
-                pass
-           print(d)    
+                pass    
            p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
        
     def args(self,p):
@@ -57,10 +56,12 @@ class RunInterface(object):
        try:
            args, unknown = p.parse_known_args()
        except:
-           sys.exit(1)
+           args = None
        self.params = args
+       self.parser = p
        
-                
+    def print_help(self):
+        self.parser.print_help()
        
     def run(self):
         raise NotImplementedError()

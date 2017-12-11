@@ -16,7 +16,23 @@ class Run(RunInterface):
        
     def run(self):
         runners = []
-        for arg in vars(self.params):
+        flat_runs = [item for sublist in getattr(self.params, "runs") for item in sublist]
+        display_help = self.params.man
+        for r in flat_runs:
+            runner = get_mod_object("runs",r,"run") 
+            runner.build()
+            runners.append(runner)
+        for r in runners:
+            if not display_help:
+                try:
+                    r.run()
+                except AttributeError as e:
+                    r.print_help()
+                    raise AttributeError("Check your command-line arguments, you got the following error : " + str(e))
+            else:
+                r.print_help()
+        
+            """
             flat_runs = [item for sublist in getattr(self.params, arg) for item in sublist]
             for r in flat_runs:
                 runner = get_mod_object("runs",r,"run") 
@@ -24,6 +40,7 @@ class Run(RunInterface):
                 runners.append(runner)
             for r in runners:
                 r.run()
+            """
                 
                 
            
@@ -32,9 +49,23 @@ class Run(RunInterface):
 if __name__ == "__main__":
 
     main_run = Run()
-    
     main_run.build()
+    try:
+        main_run.run()
+    except Exception as e:
+        print(e)
     
-    main_run.run()
+"""
+runners = []
+        flat_runs = []
+        for arg in vars(self.params):
+            if arg == "--runs-run":
+                flat_runs += [item for sublist in getattr(self.params, arg) for item in sublist]
+        for r in flat_runs:
+            runner = get_mod_object("runs",r,"run") 
+            runner.build()
+            runners.append(runner)
+        for r in runners:
     
-    
+        r.run()    
+"""
