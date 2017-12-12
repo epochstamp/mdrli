@@ -99,7 +99,7 @@ class Environment(object):
 
         raise NotImplementedError()
 
-    def summarizePerformance(self, test_data_set):
+    def summarizePerformance(self, test_data_set,path_dump="data/" + self.__class__.__name__.lower()):
         """Optional hook that can be used to show a summary of the performance of the agent on the
         environment in the current mode.
 
