@@ -26,7 +26,7 @@ class Qlearning(RunInterface):
 
     def initialize(self):
        self.description="Q-learning with a Q-network."
-       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module"]
+       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module","database"]
 
     
     def run(self):

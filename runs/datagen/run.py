@@ -61,6 +61,8 @@ class Datagen(RunInterface):
         f = open("data/" + self.params.env_module + "/last","w+")
         f.write(data)
         f.close()
+        
+
 
 
 if __name__=="__main__":
