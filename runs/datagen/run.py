@@ -13,7 +13,7 @@ sys.path.insert(0, 'conf_env/')
 from utils import get_mod_object, md5_file,parse_conf
 from run_interface import RunInterface
 import argparse
-from deer.agent import DataSet
+from data.dataset import DataSet
 from shutil import copyfile
 
 class Datagen(RunInterface):
@@ -38,7 +38,7 @@ class Datagen(RunInterface):
         conf_pol_dir = "confs/conf_pol/" + self.params.pol_module + "/" + conf_pol_file
         env_params = parse_conf(conf_env_dir)
         pol_params = parse_conf(conf_pol_dir)
-        env = get_mod_object("envs",self.params.env_module,"env",rng, env_params)
+        env = get_mod_object("envs",self.params.env_module,"env",rng, **env_params)
         pol = get_mod_object("pols",self.params.pol_module,"pol",env.nActions(),rng, pol_params)
         dataset = DataSet(env)
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()

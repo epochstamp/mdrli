@@ -27,7 +27,6 @@ class RunInterface(object):
                     d["type"] = float
            except:
                 pass
-           print(d)    
            p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
        
     def args(self,p):

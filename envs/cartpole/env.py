@@ -20,14 +20,13 @@ import sys
 sys.path.insert(0, 'utils/cartpole')
 sys.path.insert(0, 'utils')
 from render_movie import save_mp4
-from deer.base_classes import Environment
-from deer.agent import DataSet
+from envs.env import Environment
 from utils import parse_conf
 # Physics constants
 PI = np.pi
 
 class Cartpole(Environment):
-    def __init__(self, rng="", params=None):
+    def __init__(self, rng="", g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5,video_prefix=""):
         """ Initialize environment.
 
         Arguments:
@@ -39,18 +38,15 @@ class Cartpole(Environment):
         #self._last_observation = [0, 0, 0, 0]
         self._input_dim = [(1,), (1,), (1,), (1,)]
         self._video = 0
-        self.params = dict()
-        self.params["G"] = 9.8 
-        self.params["M_CART"] = 1.0
-        self.params["M_POLE"] = 0.1
-        self.params["L"] = 0.5
-        self.params["F"] = 10
-        self.params["R"] = 0
-        self.params["S"] = 5
-        self.params["VIDEO_PREFIX"] = ""
-        if params is not None:
-            for k,v in params.items():
-                self.params[k] = float(v) if k != "VIDEO_PREFIX" else v
+        self.g = 9.8 
+        self.m_cart = 1.0
+        self.m_pole = 0.1
+        self.l = 0.5
+        self.f = 10
+        self.r = 0
+        self.s = 5
+        self.video_prefix = ""
+
             
            
             
@@ -67,9 +63,9 @@ class Cartpole(Environment):
             reward - reward for this transition
         """
         # Direction of the force
-        force = self.params["F"]
+        force = self.f
         if (action == 0):
-            force = -self.params["F"]
+            force = -self.f
 
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
@@ -83,21 +79,12 @@ class Cartpole(Environment):
             cos_theta = np.cos(theta)
             sin_theta = np.sin(theta)
         
-        lhs_mat = np.array([[self.params["M_POLE"] + self.params["M_CART"], self.params["M_POLE"]*self.params["L"] * cos_theta],[cos_theta,-self.params["L"]]])
-        rhs_mat = np.array([force - self.params["M_POLE"]*self.params["L"]*theta_dot*theta_dot*sin_theta, - self.params["G"]*sin_theta])
+        lhs_mat = np.array([[self.m_pole + self.m_cart, self.m_pole*self.l * cos_theta],[cos_theta,-self.l]])
+        rhs_mat = np.array([force - self.m_pole*self.l*theta_dot*theta_dot*sin_theta, - self.g*sin_theta])
         sols = np.linalg.solve(lhs_mat,rhs_mat)
         x_dd = sols[0]
         theta_dd = sols[1]
-        """
-        f_cart = self.params["MU_C"] * np.sign(x_dot)
-        f_pole = self.params["MU_P"] * theta_dot / (self.params["M_POLE"]*self.params["L"])
-
-        tmp = (force + self.params["M_POLE"]*self.params["L"]*sin_theta*theta_dot**2 - f_cart) \
-              / (self.params["M_POLE"] + self.params["M_CART"])
-        theta_dd = (self.params["G"]*sin_theta - cos_theta*tmp - f_pole) \
-                   / (self.params["L"]*(4/3. - self.params["M_POLE"]*cos_theta**2/(self.params["M_POLE"] + self.params["M_CART"]))) 
-        x_dd = tmp - self.params["M_POLE"]*theta_dd*cos_theta/(self.params["M_POLE"] + self.params["M_CART"])
-        """
+   
 
         # Update observation vector
         self._last_observation = [
@@ -112,7 +99,7 @@ class Cartpole(Environment):
         reward -= abs(self._last_observation[0])/2.
      
         # The cart cannot move beyond -5 or 5
-        S = float(self.params["S"])
+        S = float(self.s)
         if(self._last_observation[0]<-S):
             self._last_observation[0]=-S
         if(self._last_observation[0]>S):
@@ -123,11 +110,11 @@ class Cartpole(Environment):
     def convert_repr(self):
         lastobs = copy.deepcopy(self._last_observation)
     
-        if int(self.params["R"]) >= 1:
-            S = float(self.params["S"])
+        if int(self.r) >= 1:
+            S = float(self.s)
             lastobs[0] = S + lastobs[0]
 
-        if int(self.params["R"]) >= 2:
+        if int(self.r) >= 2:
             lastobs[1] *= 0.0174533 
 
         return lastobs
@@ -158,7 +145,7 @@ class Cartpole(Environment):
         for i in range(1, 4):
             data[:,i] = observations[i - 1]
         data[:,0]=np.arange(len(observations[0]))*0.02
-        save_mp4(data, self._video, self.params["VIDEO_PREFIX"])
+        save_mp4(data, self._video, self.video_prefix)
         self._video += 1
         return
 
