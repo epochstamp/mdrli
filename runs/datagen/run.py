@@ -43,7 +43,7 @@ class Datagen(RunInterface):
         dataset = DataSet(env)
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         data = self.params.out_prefix + str(hashed)
-        out = "data/" + self.params.env_module + "/" + data + ".data"
+        out = "data/" + self.params.env_module + "/" + data
     
     
         for i in range(int(self.params.n_episodes)):
@@ -57,7 +57,7 @@ class Datagen(RunInterface):
                     break
     
         
-        dump(dataset,out)
+        dump(dataset,out + ".data")
         f = open("data/" + self.params.env_module + "/last","w+")
         f.write(data)
         f.close()

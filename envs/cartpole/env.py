@@ -131,12 +131,13 @@ class Cartpole(Environment):
         self._last_observation = [x, 0, theta, 0]
         return self._last_observation
         
-    def summarizePerformance(self, test_data_set):
+    def summarizePerformance(self, test_data_set, path_dump=None):
         """ This function is called at every PERIOD_BTW_SUMMARY_PERFS.
 
         Arguments:
             test_data_set - Simulation data returned by the agent.
         """
+        Environment.summarizePerformance(self,test_data_set, path_dump)
         print ("Summary Perf")
 
         # Save the data in the correct input format for video generation

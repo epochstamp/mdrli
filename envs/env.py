@@ -99,7 +99,7 @@ class Environment(object):
 
         raise NotImplementedError()
 
-    def summarizePerformance(self, test_data_set,path_dump="data/" + self.__class__.__name__.lower()):
+    def summarizePerformance(self, test_data_set,path_dump=None):
         """Optional hook that can be used to show a summary of the performance of the agent on the
         environment in the current mode.
 
@@ -110,8 +110,7 @@ class Environment(object):
             observations, actions taken and rewards obtained, as well as wether each transition was terminal or 
             not. Refer to the documentation of agent.DataSet for more information.
         """
-
-        pass
+        self.path_dump = "data/" + self.__class__.__name__.lower() + "/" if path_dump is None else path_dump
 
     def observationType(self, subject):
         """Gets the most inner type (np.uint8, np.float32, ...) of [subject].
