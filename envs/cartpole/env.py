@@ -26,7 +26,7 @@ from utils import parse_conf
 PI = np.pi
 
 class Cartpole(Environment):
-    def __init__(self, rng="", g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5,video_prefix=""):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5,video_prefix=""):
         """ Initialize environment.
 
         Arguments:

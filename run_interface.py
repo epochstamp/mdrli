@@ -5,7 +5,7 @@ import argparse
 sys.path.insert(0, 'utils/')
 from utils import parse_conf
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, isdir
 
 
 class RunInterface(object):
@@ -32,6 +32,7 @@ class RunInterface(object):
        
     def args(self,p):
        path = "cfgs/arg/" + self.__class__.__name__.lower() + "/"
+       if not isdir(path): return
        commands = [f for f in listdir(path) if isfile(join(path, f))]
        for c in commands:
            d = parse_conf(path+c)
