@@ -155,7 +155,6 @@ class Ctrl_deerfault(QNetwork):
         Average loss of the batch training (RMSE)
         Individual (square) losses for each tuple
         """
-        print("prout")
         if self.update_counter % self._freeze_interval == 0:
             self._resetQHat()
         
