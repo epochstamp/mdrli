@@ -146,7 +146,7 @@ class Cartpole(Environment):
         for i in range(1, 4):
             data[:,i] = observations[i - 1]
         data[:,0]=np.arange(len(observations[0]))*0.02
-        save_mp4(data, self._video, self.video_prefix)
+        save_mp4(data, self._video, self.path_dump + "/" + self.video_prefix)
         self._video += 1
         return
 

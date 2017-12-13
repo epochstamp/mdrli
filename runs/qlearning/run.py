@@ -100,7 +100,7 @@ class Qlearning(RunInterface):
         out = todump
 
         dump_dump("neural_nets_params", self.params.qnetw_module, out,agent._network.getAllParams()) 
-        #dump_dump("ctrl_neural_nets", self.params.qnetw_module, out,agent._network)  
+        dump_dump("ctrl_neural_nets", self.params.qnetw_module, out,agent._network)  
 
 if __name__=="__main__":
     r = Qlearning()
