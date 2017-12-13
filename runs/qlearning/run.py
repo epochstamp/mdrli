@@ -12,7 +12,7 @@ sys.path.insert(0, 'conf_env/')
 from utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump
 from run_interface import RunInterface
 import argparse
-from deer.agent import DataSet
+from data.dataset import DataSet
 from shutil import copyfile
 from joblib import load,dump
 from deer.agent import NeuralAgent
@@ -58,6 +58,7 @@ class Qlearning(RunInterface):
                         data = None
         if data is not None:
                 dataset = load("data/" + self.params.env_module + "/" + data + ".data")
+   
 
         
         backend_nnet_params["input_dimensions"] = env.inputDimensions()
@@ -71,10 +72,12 @@ class Qlearning(RunInterface):
                 try:
                         ctrl_neural_net.setAllParams("dumps/neural_nets_params/" + str(self.params.qnetw_module) + "/" + self.params.warmstart + ".params")
                 except:
-                        print ("Warning - Warm start option is corrupted and thus not taken into account")
+                        try:
+                                load_dump("ctrl_neural_nets", self.params.qnetw_module,self.params.warmstart)
+                        except:
+                                print ("Warning - Warm start option is corrupted and thus not taken into account")
                                 
                 
-        
         if "model" in pol_params.keys():
                 pol_params["MODEL_DUMP"]=ctrl_neural_net
 
@@ -98,9 +101,7 @@ class Qlearning(RunInterface):
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         todump = self.params.out_prefix + str(hashed)
         out = todump
-
-        dump_dump("neural_nets_params", self.params.qnetw_module, out,agent._network.getAllParams()) 
-        dump_dump("ctrl_neural_nets", self.params.qnetw_module, out,agent._network)  
+        ctrl_neural_net.dumpBackEnd("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump","dumps/neural_nets_params/"+self.params.backend_nnet+"/"+out+"_params.dump")
 
 if __name__=="__main__":
     r = Qlearning()

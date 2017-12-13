@@ -7,8 +7,10 @@ Code for general deep Q-learning using Keras that can take as inputs scalars, ve
 import numpy as np
 from keras.optimizers import SGD,RMSprop
 from keras import backend as K
-from deer.base_classes import QNetwork
+from ctrl_neural_nets.ctrl_neural_net import QNetwork
 from deer.q_networks.NN_keras import NN # Default Neural network used
+from keras.models import load_model
+from joblib import dump,load
 
 class Ctrl_deerfault(QNetwork):
     """
@@ -78,6 +80,20 @@ class Ctrl_deerfault(QNetwork):
     def setAllParams(self, list_of_values):
         for i,p in enumerate(self.params):
             K.set_value(p,list_of_values[i])
+            
+    def dumpBackEnd(self, out_model, out_params):
+        self.q_vals.save(out_model)
+        dump(self.getAllParams(), out_params)
+        
+    def loadBackEndModel(self, in_model):
+        return load_model(in_model)
+        
+    def loadBackEndParams(self, in_params):
+        p = load(in_model)
+        params_value=[]
+        for i,p in enumerate(p):
+            params_value.append(K.get_value(p))
+        return params_value
 
     def train(self, states_val, actions_val, rewards_val, next_states_val, terminals_val):
         """

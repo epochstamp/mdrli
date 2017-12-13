@@ -12,7 +12,7 @@ import copy
 import sys
 import joblib
 from warnings import warn
-
+from data.dataset import DataSet
 from ctrls.controller import Controller
 from deer.helper import tree 
 from deer.policies import EpsilonGreedyPolicy
