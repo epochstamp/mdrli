@@ -155,7 +155,7 @@ class Ctrl_deerfault(QNetwork):
         Average loss of the batch training (RMSE)
         Individual (square) losses for each tuple
         """
-        
+        print("prout")
         if self.update_counter % self._freeze_interval == 0:
             self._resetQHat()
         
@@ -185,10 +185,8 @@ class Ctrl_deerfault(QNetwork):
         # Only some elements of next_q_vals are actual value that I target. 
         # My loss should only take these into account.
         # Workaround here is that many values are already "exact" in this update
-        loss=self.q_vals.train_on_batch(states_val.tolist() , q_vals ) 
-                
+        loss=self.q_vals.train_on_batch(states_val.tolist() , q_vals )      
         self.update_counter += 1        
-
         # loss*self._n_actions = np.average(loss_ind)
         return np.sqrt(loss),loss_ind
 

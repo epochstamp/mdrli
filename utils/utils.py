@@ -34,12 +34,12 @@ def list_classes_module_with_parent(modulefile,parent):
 def get_mod_object(folder,module,modtype,*args,**kwargs):
     mod = __import__(folder + "." + module + "." + modtype, fromlist=[capitalizeFirstLetter(module)])
     try:
-        return getattr(mod, capitalizeFirstLetter(module))(*args)
+        return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
     except:
         try:
-                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
+                return getattr(mod, capitalizeFirstLetter(module))(*args)
         except:
-                return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
+                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
 
 
 

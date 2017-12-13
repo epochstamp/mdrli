@@ -58,7 +58,6 @@ class Reporter(RunInterface):
         rw_list = np.asarray(rw_list,dtype=np.float32)
         nb_episodes = np.count_nonzero(terminals == True) + incr
         out.write(str(nb_episodes) + ";" + str(rw_list.mean()) + ";" + str(rw_list.var()) + ";" + str(rw_list.std()) + "\n")
-        print(nb_episodes)
         k = 1
         states_nspace = states.shape[0]
         out.write("episode "+str(k)+";state;action;reward;reward_cumul\n")

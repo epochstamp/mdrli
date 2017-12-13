@@ -30,12 +30,13 @@ class TrainerController(Controller):
         self._show_avg_Bellman_residual = show_avg_Bellman_residual
         self._show_episode_avg_V_value = show_episode_avg_V_value
 
-        self._on_action = 'action' == evaluate_on
-        self._on_episode = 'episode' == evaluate_on
-        self._on_epoch = 'epoch' == evaluate_on
+        self._on_action = "action" == evaluate_on
+        self._on_episode = "episode" == evaluate_on
+        self._on_epoch = "epoch" == evaluate_on
         if not self._on_action and not self._on_episode and not self._on_epoch:
             self._on_action = True
-
+        
+        
     def onStart(self, agent):
         if (self._active == False):
             return

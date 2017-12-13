@@ -21,6 +21,7 @@ from pols.greedyPolicy.pol import GreedyPolicy
 from copy import deepcopy
 from agent import NeuralAgent
 import os
+from pprint import pprint
 
 class Qlearning(RunInterface):
 
@@ -81,6 +82,7 @@ class Qlearning(RunInterface):
         
         test_policy = GreedyPolicy(env.nActions(),rng)
         test_policy.setAttribute("model",ctrl_neural_net)
+        ctrl_neural_net._batch_size = self.params.batch_size
         agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
         if data is not None:
                 agent._dataset = dataset
@@ -88,20 +90,19 @@ class Qlearning(RunInterface):
 
         
 
-        
         cfg_ctrls = parse_conf("cfgs/ctrl/" + self.params.acontroller_cfg)
         for k,v in cfg_ctrls.items():
-                controller = get_mod_object("ctrls",k,"ctrl",*v)
-                agent.attach(controller)
-                 
-
+                controller = get_mod_object("ctrls",k,"ctrl",**v)
+                pprint(controller)
+                print(v)
+                agent.attach(controller)  
         agent.run(self.params.epochs, self.params.max_steps_on_epoch)
 
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         todump = self.params.out_prefix + str(hashed)
         out = todump
         ctrl_neural_net.dumpTo("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump")
-
+        
 if __name__=="__main__":
     r = Qlearning()
     r.build()
