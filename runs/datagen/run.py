@@ -10,17 +10,36 @@ import run
 sys.path.insert(0, 'utils/')
 sys.path.insert(0, 'data/')
 sys.path.insert(0, 'conf_env/')
-from utils import get_mod_object, md5_file,parse_conf
+from utils import get_mod_object, md5_file,parse_conf,flatten
 from run_interface import RunInterface
 import argparse
 from data.dataset import DataSet
 from shutil import copyfile
+from copy import deepcopy
+from multiprocessing import Pool
+from time import time
+
+def parallel_episode(args):
+        max_size_episode = args[0]
+        env = args[1]
+        pol = args[2]
+        env.reset()
+        l = []
+        for j in range(int(max_size_episode)):
+                obs = env.observe()
+                act,_ = pol.action(obs)
+                r = env.act(act)
+                l.append((obs,act,r,j == int(max_size_episode) - 1 or env.inTerminalState(),1))
+                if env.inTerminalState():
+                    break
+        return l
+        
 
 class Datagen(RunInterface):
 
     def initialize(self):
        self.description="Model-based data generator."
-       self.lst_common=["out-prefix","max-size-episode","pol-conf-file","pol-module","rng","n-episodes","env-conf-file","env-module","pol-model"]
+       self.lst_common=["out-prefix","max-size-episode","pol-conf-file","pol-module","rng","n-episodes","env-conf-file","env-module","pol-model","threads"]
 
     
     def run(self):
@@ -50,16 +69,23 @@ class Datagen(RunInterface):
                 ctrl_neural_net.load()
                 pol.setAttribute("model",ctrl_neural_net)
     
-        for i in range(int(self.params.n_episodes)):
-            env.reset()
-            for j in range(int(self.params.max_size_episode)):
-                obs = env.observe()
-                act,_ = pol.action(obs)
-                r = env.act(act)
-                dataset.addSample(obs, act, r, j == int(self.params.max_size_episode) - 1 or env.inTerminalState(), 1)
-                if env.inTerminalState():
-                    break
-    
+        currTime = time()
+        if self.params.threads == 1:
+                for i in range(int(self.params.n_episodes)):
+                    env.reset()
+                    for j in range(int(self.params.max_size_episode)):
+                        obs = env.observe()
+                        act,_ = pol.action(obs)
+                        r = env.act(act)
+                        dataset.addSample(obs, act, r, j == int(self.params.max_size_episode) - 1 or env.inTerminalState(), 1)
+                        if env.inTerminalState():
+                            break
+        else:
+                p = Pool(self.params.threads)
+                lst = flatten(p.map(parallel_episode,[[self.params.max_size_episode, deepcopy(env), deepcopy(pol)]]*self.params.n_episodes), ltypes=(list))
+                for o,a,r,t,p in lst:
+                      dataset.addSample(o,a,r,t,p)
+        print ("Execution time : " + str(time() - currTime))
         
         dump(dataset,out + ".data")
         f = open("data/" + self.params.env_module + "/last","w+")
