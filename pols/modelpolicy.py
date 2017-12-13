@@ -1,10 +1,10 @@
 import numpy as np
+from pols.policy import Policy
 
-class Policy(object):
+class ModelPolicy(Policy):
 
     def __init__(self, n_actions,random_state):
-        self.n_actions = n_actions
-        self.random_state = random_state
+        Policy.__init__(self, n_actions, random_state)
 
 
     def action(self, state):
@@ -14,7 +14,10 @@ class Policy(object):
         raise NotImplementedError()
 
     def setAttribute(self, attr, value):
-        pass
+        if attr == "model":
+             self._model = value
 
     def getAttribute(self, attr):
+        if attr == "model":
+             return _model
         return None

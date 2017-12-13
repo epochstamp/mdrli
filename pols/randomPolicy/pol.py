@@ -3,7 +3,7 @@ from pols.policy import Policy
 
 class RandomPolicy(Policy):
 
-    def __init__(self, n_actions,random_state,params=None):
+    def __init__(self, n_actions,random_state):
         Policy.__init__(self,n_actions,random_state)
         
 

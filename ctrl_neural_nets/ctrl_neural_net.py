@@ -38,13 +38,10 @@ class QNetwork(object):
         """        
         raise NotImplementedError()
         
-    def dumpBackEnd(self, out_model, out_params):
+    def dumpTo(self, out_file):
         raise NotImplementedError()
         
-    def loadBackEndModel(self, in_model):
-        raise NotImplementedError()
-        
-    def loadBackEndParams(self, in_params):
+    def load(self):
         raise NotImplementedError()
 
     def setLearningRate(self, lr):

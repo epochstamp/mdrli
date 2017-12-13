@@ -36,7 +36,10 @@ def get_mod_object(folder,module,modtype,*args,**kwargs):
     try:
         return getattr(mod, capitalizeFirstLetter(module))(*args)
     except:
-        return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
+        try:
+                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
+        except:
+                return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
 
 
 

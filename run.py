@@ -5,6 +5,8 @@ import argparse
 sys.path.insert(0, 'utils/')
 from utils import get_mod_object
 from run_interface import RunInterface
+import traceback
+
 
 class Run(RunInterface):
        
@@ -54,3 +56,5 @@ if __name__ == "__main__":
         main_run.run()
     except Exception as e:
         print(e)
+        print("Traceback below")
+        traceback.print_exc()

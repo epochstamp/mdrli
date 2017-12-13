@@ -2,7 +2,7 @@ import sys
 import logging
 import random
 import numpy as np
-from joblib import dump
+from joblib import dump,load
 import json
 from random import randint
 import hashlib
@@ -26,7 +26,7 @@ class Qlearning(RunInterface):
 
     def initialize(self):
        self.description="Q-learning with a Q-network."
-       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module","database"]
+       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module","database","pol-model"]
 
     
     def run(self):
@@ -45,8 +45,8 @@ class Qlearning(RunInterface):
         pol_params = parse_conf(conf_pol_dir)
         ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
         backend_nnet_params = parse_conf(conf_backend_nnet_dir)
-        env = get_mod_object("envs",self.params.env_module,"env",rng, env_params)
-        pol = get_mod_object("pols",self.params.pol_module,"pol",rng, pol_params)
+        env = get_mod_object("envs",self.params.env_module,"env",rng, **env_params)
+        pol = get_mod_object("pols",self.params.pol_module,"pol",env.nActions(),rng, **pol_params)
         env.reset()
         data = self.params.database
         if data == "none":
@@ -60,30 +60,28 @@ class Qlearning(RunInterface):
                 dataset = load("data/" + self.params.env_module + "/" + data + ".data")
    
 
-        
-        backend_nnet_params["input_dimensions"] = env.inputDimensions()
-        backend_nnet_params["n_actions"] = env.nActions()
-        backend_nnet_params["random_state"] = rng
-        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", **backend_nnet_params)
-        ctrl_neural_nets_params["random_state"] = rng
-        ctrl_neural_nets_params["neural_network"] = neural_net
-        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", env, **ctrl_neural_nets_params)
-        if self.params.warmstart != "none":
+        if self.params.pol_model is None:
+                backend_nnet_params["input_dimensions"] = env.inputDimensions()
+                backend_nnet_params["n_actions"] = env.nActions()
+                backend_nnet_params["random_state"] = rng
+                neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", **backend_nnet_params)
+                ctrl_neural_nets_params["random_state"] = rng
+                ctrl_neural_nets_params["neural_network"] = neural_net
+                ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", env, **ctrl_neural_nets_params)
+        else:
                 try:
-                        ctrl_neural_net.setAllParams("dumps/neural_nets_params/" + str(self.params.qnetw_module) + "/" + self.params.warmstart + ".params")
+                        ctrl_neural_net = load(self.params.pol_model)
+                        ctrl_neural_net.load()
                 except:
-                        try:
-                                load_dump("ctrl_neural_nets", self.params.qnetw_module,self.params.warmstart)
-                        except:
-                                print ("Warning - Warm start option is corrupted and thus not taken into account")
+                        raise AttributeError("Warm start option is corrupted - please check your QNetwork controller object has been dumped using method dumpTo")
                                 
                 
-        if "model" in pol_params.keys():
-                pol_params["MODEL_DUMP"]=ctrl_neural_net
-
-        pol_2_params = dict()
-        pol_2_params["MODEL_DUMP"] = ctrl_neural_net
-        agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=GreedyPolicy(env.nActions(),rng, pol_2_params), only_full_history=True)
+        pol.setAttribute("model",ctrl_neural_net)
+        
+        
+        test_policy = GreedyPolicy(env.nActions(),rng)
+        test_policy.setAttribute("model",ctrl_neural_net)
+        agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
         if data is not None:
                 agent._dataset = dataset
         
@@ -101,7 +99,7 @@ class Qlearning(RunInterface):
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         todump = self.params.out_prefix + str(hashed)
         out = todump
-        ctrl_neural_net.dumpBackEnd("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump","dumps/neural_nets_params/"+self.params.backend_nnet+"/"+out+"_params.dump")
+        ctrl_neural_net.dumpTo("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump")
 
 if __name__=="__main__":
     r = Qlearning()

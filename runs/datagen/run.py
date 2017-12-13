@@ -2,7 +2,7 @@ import sys
 import logging
 import random
 import numpy as np
-from joblib import dump
+from joblib import dump, load
 import json
 from random import randint
 import hashlib
@@ -20,7 +20,7 @@ class Datagen(RunInterface):
 
     def initialize(self):
        self.description="Model-based data generator."
-       self.lst_common=["out-prefix","max-size-episode","pol-conf-file","pol-module","rng","n-episodes","env-conf-file","env-module"]
+       self.lst_common=["out-prefix","max-size-episode","pol-conf-file","pol-module","rng","n-episodes","env-conf-file","env-module","pol-model"]
 
     
     def run(self):
@@ -39,12 +39,16 @@ class Datagen(RunInterface):
         env_params = parse_conf(conf_env_dir)
         pol_params = parse_conf(conf_pol_dir)
         env = get_mod_object("envs",self.params.env_module,"env",rng, **env_params)
-        pol = get_mod_object("pols",self.params.pol_module,"pol",env.nActions(),rng, pol_params)
+        pol = get_mod_object("pols",self.params.pol_module,"pol",env.nActions(),rng, **pol_params)
         dataset = DataSet(env)
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         data = self.params.out_prefix + str(hashed)
         out = "data/" + self.params.env_module + "/" + data
     
+        if self.params.pol_model is not None:
+                ctrl_neural_net = load(self.params.pol_model)
+                ctrl_neural_net.load()
+                pol.setAttribute("model",ctrl_neural_net)
     
         for i in range(int(self.params.n_episodes)):
             env.reset()
