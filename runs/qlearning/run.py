@@ -90,14 +90,13 @@ class Qlearning(RunInterface):
 
         
 
-        cfg_ctrls = parse_conf("cfgs/ctrl/" + self.params.acontroller_cfg)
-        for k,v in cfg_ctrls.items():
-                controller = get_mod_object("ctrls",k,"ctrl",**v)
-                pprint(controller)
-                print(v)
+        cfg_ctrls, sections = parse_conf("cfgs/ctrl/" + self.params.acontroller_cfg,get_sections=True)
+        for s in sections:
+                v = cfg_ctrls[s]
+                controller = get_mod_object("ctrls",s,"ctrl",**v)
                 agent.attach(controller)  
         agent.run(self.params.epochs, self.params.max_steps_on_epoch)
-
+        
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         todump = self.params.out_prefix + str(hashed)
         out = todump

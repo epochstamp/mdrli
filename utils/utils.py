@@ -1,6 +1,7 @@
 import hashlib
 import sys
 from configobj import ConfigObj
+from configparser import ConfigParser
 from validate import Validator
 from joblib import load,dump
 import importlib
@@ -73,7 +74,7 @@ def flatten(l, ltypes=(list, tuple)):
         i += 1
     return ltype(l)
     
-def parse_conf(conf_file):
+def parse_conf(conf_file, get_sections=False):
     directory = os.path.dirname(conf_file)
     validator = Validator()
     try:
@@ -81,6 +82,10 @@ def parse_conf(conf_file):
         params.validate(validator, copy=True)
     except:
         params = ConfigObj(conf_file)
+    if get_sections:
+        cfgparser = ConfigParser()
+        cfgparser.read_file(open(conf_file))
+        return params, cfgparser.sections()
     return params
 
 def copy_rename(old_file_name, new_file_name):
