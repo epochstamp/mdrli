@@ -27,12 +27,12 @@ class Reporter(RunInterface):
 
         if self.params.database == "none":
                 raise Exception("Reporter needs a database to make a report")
-        dataset = load("data/" + self.params.env_module + "/" + self.params.database + ".data")
+        dataset = load(self.params.database)
         env = get_mod_object("envs",self.params.env_module,"env",1)
         
         
 
-        out = "data/" + self.params.env_module + "/" + self.params.database + ".csv"
+        out = self.params.database.replace(".data","") + ".csv"
         
         
         print ("Generic report (output file : "+out+")")

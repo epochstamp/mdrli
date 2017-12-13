@@ -4,7 +4,7 @@ import numpy as np
 class DataSet(object):
     """A replay memory consisting of circular buffers for observations, actions, rewards and terminals."""
 
-    def __init__(self, env, random_state=None, max_size=1000, use_priority=False, only_full_history=True):
+    def __init__(self, env, random_state=None, max_size=1000000, use_priority=False, only_full_history=True):
         """Initializer.
         Parameters
         -----------

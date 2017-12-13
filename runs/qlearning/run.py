@@ -57,7 +57,7 @@ class Qlearning(RunInterface):
                 except: 
                         data = None
         if data is not None:
-                dataset = load("data/" + self.params.env_module + "/" + data + ".data")
+                dataset = load(data)
    
 
         if self.params.pol_model is None:
@@ -94,6 +94,7 @@ class Qlearning(RunInterface):
                 controller = get_mod_object("ctrls",k,"ctrl",*v)
                 agent.attach(controller)
                  
+
         agent.run(self.params.epochs, self.params.max_steps_on_epoch)
 
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()

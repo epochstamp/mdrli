@@ -68,6 +68,5 @@ class TrainerController(Controller):
 
     def _update(self, agent):
         if self._periodicity <= 1 or self._count % self._periodicity == 0:
-            print("hello")
             agent.train()
         self._count += 1

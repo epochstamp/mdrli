@@ -23,8 +23,13 @@ def parallel_episode(args):
         max_size_episode = args[0]
         env = args[1]
         pol = args[2]
+        pol_model = args[3]
         env.reset()
         l = []
+        if pol_model is not None:
+                ctrl_neural_net = load(pol_model)
+                ctrl_neural_net.load()
+                pol.setAttribute("model",ctrl_neural_net)
         for j in range(int(max_size_episode)):
                 obs = env.observe()
                 act,_ = pol.action(obs)
@@ -64,13 +69,14 @@ class Datagen(RunInterface):
         data = self.params.out_prefix + str(hashed)
         out = "data/" + self.params.env_module + "/" + data
     
-        if self.params.pol_model is not None:
-                ctrl_neural_net = load(self.params.pol_model)
-                ctrl_neural_net.load()
-                pol.setAttribute("model",ctrl_neural_net)
+        
     
         currTime = time()
         if self.params.threads == 1:
+                if self.params.pol_model is not None:
+                        ctrl_neural_net = load(self.params.pol_model)
+                        ctrl_neural_net.load()
+                        pol.setAttribute("model",ctrl_neural_net)
                 for i in range(int(self.params.n_episodes)):
                     env.reset()
                     for j in range(int(self.params.max_size_episode)):
@@ -82,7 +88,8 @@ class Datagen(RunInterface):
                             break
         else:
                 p = Pool(self.params.threads)
-                lst = flatten(p.map(parallel_episode,[[self.params.max_size_episode, deepcopy(env), deepcopy(pol)]]*self.params.n_episodes), ltypes=(list))
+                lst = p.map(parallel_episode,[[self.params.max_size_episode, deepcopy(env), deepcopy(pol), self.params.pol_model]]*self.params.n_episodes)
+                lst = flatten(lst,ltypes=(list))
                 for o,a,r,t,p in lst:
                       dataset.addSample(o,a,r,t,p)
         print ("Execution time : " + str(time() - currTime))
