@@ -73,7 +73,7 @@ class VerboseController(Controller):
             print("Discount factor: {}".format(agent._network.discountFactor()))
             print("Database size: {}".format(agent._dataset.terminals().shape[0]))
             try:
-                print("Epsilon: {}".format(agent._train_policy.epsilon()))
+                print("Epsilon: {}".format(agent._train_policy.getAttribute("epsilon")))
             except:
                 pass
         self._count += 1
