@@ -21,10 +21,11 @@ class TrainerController(Controller):
     def __init__(self, evaluate_on='action', periodicity=1, show_episode_avg_V_value=True, show_avg_Bellman_residual=True):
         """Initializer.
         """
+        super(self.__class__, self).__init__()
         show_episode_avg_V_value = bool(show_episode_avg_V_value)
         show_avg_Bellman_residual = bool(show_avg_Bellman_residual)
         periodicity = int(periodicity)
-        super(self.__class__, self).__init__()
+        
         self._count = 0
         self._periodicity = periodicity
         self._show_avg_Bellman_residual = show_avg_Bellman_residual

@@ -83,7 +83,7 @@ class Qlearning(RunInterface):
         test_policy = GreedyPolicy(env.nActions(),rng)
         test_policy.setAttribute("model",ctrl_neural_net)
         ctrl_neural_net._batch_size = self.params.batch_size
-        agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
+        agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=max(env.inputDimensions()[i][0] for i in range(len(env.inputDimensions()))), batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
         if data is not None:
                 agent._dataset = dataset
         

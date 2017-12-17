@@ -317,7 +317,7 @@ class NeuralAgent(object):
             if self._mode != -1:
                 self._total_mode_reward += reward
 
-            is_terminal = self._environment.inTerminalState()
+            is_terminal = self._environment.inTerminalState() or maxSteps == 0
                 
             self._addSample(obs, action, reward, is_terminal)
             for c in self._controllers: c.onActionTaken(self)

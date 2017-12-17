@@ -69,7 +69,7 @@ class Cartpole(Environment):
 
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
-        n_tau = 100
+        n_tau = 10
         delta_t = 0.01
         tau = delta_t / n_tau
         for i in range(n_tau):
@@ -79,20 +79,20 @@ class Cartpole(Environment):
             cos_theta = np.cos(theta)
             sin_theta = np.sin(theta)
         
-        lhs_mat = np.array([[self.m_pole + self.m_cart, self.m_pole*self.l * cos_theta],[cos_theta,-self.l]])
-        rhs_mat = np.array([force - self.m_pole*self.l*theta_dot*theta_dot*sin_theta, - self.g*sin_theta])
-        sols = np.linalg.solve(lhs_mat,rhs_mat)
-        x_dd = sols[0]
-        theta_dd = sols[1]
+            lhs_mat = np.array([[self.m_pole + self.m_cart, self.m_pole*self.l * cos_theta],[cos_theta,-self.l]])
+            rhs_mat = np.array([force - self.m_pole*self.l*theta_dot*theta_dot*sin_theta, - self.g*sin_theta])
+            sols = np.linalg.solve(lhs_mat,rhs_mat)
+            x_dd = sols[0]
+            theta_dd = sols[1]
    
 
-        # Update observation vector
-        self._last_observation = [
-            x + tau*x_dot,
-            x_dot + tau*x_dd,
-            self._to_range(theta + tau*theta_dot),
-            theta_dot + tau*theta_dd,
-            ]
+            # Update observation vector
+            self._last_observation = [
+                x + tau*x_dot,
+                x_dot + tau*x_dd,
+                self._to_range(theta + tau*theta_dot),
+                theta_dot + tau*theta_dd,
+                ]
     
         # Simple reward
         reward = - abs(theta) 
