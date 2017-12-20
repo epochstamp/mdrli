@@ -29,7 +29,7 @@ N_TAU=10
 DELTA_T=0.02
 
 class Cartpole(Environment):
-    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=100,r=0,s=5,video_prefix=""):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5):
         """ Initialize environment.
 
         Arguments:
@@ -48,7 +48,6 @@ class Cartpole(Environment):
         self.f = 10
         self.r = 0
         self.s = 5
-        self.video_prefix = ""
 
             
            
@@ -74,6 +73,7 @@ class Cartpole(Environment):
         # the transitions
         n_tau = N_TAU
         delta_t = DELTA_T
+
         tau = delta_t / n_tau
         for i in range(n_tau):
             # Physics -> See wiki for the formulas
@@ -100,7 +100,6 @@ class Cartpole(Environment):
         # Simple reward
         reward = - abs(theta) 
         reward -= abs(self._last_observation[0])/2.
-     
         # The cart cannot move beyond -S or S
         S = float(self.s)
         if(self._last_observation[0]<-S):
@@ -155,7 +154,7 @@ class Cartpole(Environment):
 
     def _to_range(self, angle):
         # Convert theta in the range [-PI, PI]
-        n = abs(angle) // (2*PI)
+        n = abs(angle) // (2*PI)        
         if (angle < 0):
             angle += n*2*PI
         else:

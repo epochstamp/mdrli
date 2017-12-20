@@ -1,6 +1,7 @@
 import hashlib
 import sys
 from configobj import ConfigObj
+from configparser import ConfigParser
 from validate import Validator
 from joblib import load,dump
 import importlib
@@ -34,9 +35,12 @@ def list_classes_module_with_parent(modulefile,parent):
 def get_mod_object(folder,module,modtype,*args,**kwargs):
     mod = __import__(folder + "." + module + "." + modtype, fromlist=[capitalizeFirstLetter(module)])
     try:
-        return getattr(mod, capitalizeFirstLetter(module))(*args)
+        return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
     except:
-        return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
+        try:
+                return getattr(mod, capitalizeFirstLetter(module))(*args)
+        except:
+                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
 
 
 
@@ -55,8 +59,22 @@ def dump_dump(dumptype,module,name,value):
         pass
     dump(value,"dumps/" + dumptype + "/" + module + "/" + name + ".dump")
 
+def flatten(l, ltypes=(list, tuple)):
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)
     
-def parse_conf(conf_file):
+def parse_conf(conf_file, get_sections=False):
     directory = os.path.dirname(conf_file)
     validator = Validator()
     try:
@@ -64,6 +82,10 @@ def parse_conf(conf_file):
         params.validate(validator, copy=True)
     except:
         params = ConfigObj(conf_file)
+    if get_sections:
+        cfgparser = ConfigParser()
+        cfgparser.read_file(open(conf_file))
+        return params, cfgparser.sections()
     return params
 
 def copy_rename(old_file_name, new_file_name):

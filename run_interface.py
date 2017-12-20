@@ -5,7 +5,7 @@ import argparse
 sys.path.insert(0, 'utils/')
 from utils import parse_conf
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, isdir
 
 
 class RunInterface(object):
@@ -26,11 +26,13 @@ class RunInterface(object):
                 elif d["type"] == "float":
                     d["type"] = float
            except:
-                pass    
+                pass
+
            p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
        
     def args(self,p):
        path = "cfgs/arg/" + self.__class__.__name__.lower() + "/"
+       if not isdir(path): return
        commands = [f for f in listdir(path) if isfile(join(path, f))]
        for c in commands:
            d = parse_conf(path+c)
@@ -58,6 +60,10 @@ class RunInterface(object):
        except:
            args = None
        self.params = args
+       for k,v in vars(self.params).items():
+           attr = getattr(self.params,k)
+           if isinstance(attr, str) and attr.lower() == "none":
+                setattr(self.params,k,None) 
        self.parser = p
        
     def print_help(self):
