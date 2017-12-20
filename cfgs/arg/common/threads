@@ -1,0 +1,4 @@
+help=Multi-threading with n cores. Does not always applies. Please refer to the runner documentation.
+default=1
+type=int
+dest=threads

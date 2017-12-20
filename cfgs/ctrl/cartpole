@@ -1,0 +1,28 @@
+[verboseController]
+    evaluateOn=False
+    evaluate_on=epoch
+    periodicity=1
+
+[trainerController]
+    evaluate_on=action
+    show_episode_avg_V_value=True
+    show_avg_Bellman_residual=True
+
+[learningRateController]
+    periodicity=1
+    initial_learning_rate=0.005
+    learning_rate_decay=0.99
+
+[discountFactorController]
+    initial_discount_factor=0.9
+    discount_factor_growth=0.99
+    discount_factor_max=0.95
+    periodicity=1
+    
+[epsilonController]
+    initial_e=1.0 
+    e_decays=10000 
+    e_min=0.2
+    evaluate_on=action
+    periodicity=1
+    reset_every=none
