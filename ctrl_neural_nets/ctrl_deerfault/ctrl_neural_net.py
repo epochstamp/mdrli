@@ -7,8 +7,11 @@ Code for general deep Q-learning using Keras that can take as inputs scalars, ve
 import numpy as np
 from keras.optimizers import SGD,RMSprop
 from keras import backend as K
-from deer.base_classes import QNetwork
+from ctrl_neural_nets.ctrl_neural_net import QNetwork
 from deer.q_networks.NN_keras import NN # Default Neural network used
+from keras.models import load_model
+from joblib import dump,load
+import os
 
 class Ctrl_deerfault(QNetwork):
     """
@@ -78,6 +81,59 @@ class Ctrl_deerfault(QNetwork):
     def setAllParams(self, list_of_values):
         for i,p in enumerate(self.params):
             K.set_value(p,list_of_values[i])
+    """       
+    def dumpBackEnd(self, out_model, out_params):
+        self.q_vals.save(out_model)
+        dump(self.getAllParams(), out_params)
+        
+    def loadBackEndModel(self, in_model,inplace==True):
+        if not inplace:
+                return load_model(in_model)
+        else:
+                self.q_vals = load_model(in_model)
+    def loadBackEndParams(self, in_params):
+        p = load(in_model)
+        params_value=[]
+        for i,p in enumerate(p):
+            params_value.append(K.get_value(p))
+        return params_value
+    """
+    
+    def dumpTo(self,out):
+        q_vals = self.q_vals
+        next_q_vals = self.next_q_vals
+        q_vals.save("temp.h5")
+        self.q_vals = open("temp.h5","rb").read()
+        next_q_vals.save("temp.h5")
+        self.next_q_vals = open("temp.h5","rb").read()
+        os.remove("temp.h5")
+        #Remove params - we retrieve them later by load method
+        self.params = None
+        self.next_params = None
+        self.dumped = True
+        dump(self,out)
+        
+    def load(self):
+        if hasattr(self,"dumped") and self.dumped:
+            f = open("temp.h5","wb")
+            f.write(self.q_vals)
+            f.close()
+            self.q_vals = load_model("temp.h5")
+            f = open("temp.h5","wb")
+            f.write(self.next_q_vals)
+            f.close()
+            self.next_q_vals = load_model("temp.h5")
+            layers=self.q_vals.layers
+            
+            # Get back params
+            self.params = [ param
+                        for layer in layers 
+                        for param in layer.trainable_weights ]
+            layers=self.next_q_vals.layers
+            self.next_params = [ param
+                        for layer in layers 
+                        for param in layer.trainable_weights ]
+            
 
     def train(self, states_val, actions_val, rewards_val, next_states_val, terminals_val):
         """
@@ -99,7 +155,6 @@ class Ctrl_deerfault(QNetwork):
         Average loss of the batch training (RMSE)
         Individual (square) losses for each tuple
         """
-        
         if self.update_counter % self._freeze_interval == 0:
             self._resetQHat()
         
@@ -129,10 +184,8 @@ class Ctrl_deerfault(QNetwork):
         # Only some elements of next_q_vals are actual value that I target. 
         # My loss should only take these into account.
         # Workaround here is that many values are already "exact" in this update
-        loss=self.q_vals.train_on_batch(states_val.tolist() , q_vals ) 
-                
+        loss=self.q_vals.train_on_batch(states_val.tolist() , q_vals )      
         self.update_counter += 1        
-
         # loss*self._n_actions = np.average(loss_ind)
         return np.sqrt(loss),loss_ind
 

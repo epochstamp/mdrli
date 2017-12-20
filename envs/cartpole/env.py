@@ -20,14 +20,16 @@ import sys
 sys.path.insert(0, 'utils/cartpole')
 sys.path.insert(0, 'utils')
 from render_movie import save_mp4
-from deer.base_classes import Environment
-from deer.agent import DataSet
+from envs.env import Environment
 from utils import parse_conf
 # Physics constants
 PI = np.pi
 
+N_TAU=10
+DELTA_T=0.02
+
 class Cartpole(Environment):
-    def __init__(self, rng="", params=None):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=100,r=0,s=5,video_prefix=""):
         """ Initialize environment.
 
         Arguments:
@@ -39,18 +41,15 @@ class Cartpole(Environment):
         #self._last_observation = [0, 0, 0, 0]
         self._input_dim = [(1,), (1,), (1,), (1,)]
         self._video = 0
-        self.params = dict()
-        self.params["G"] = 9.8 
-        self.params["M_CART"] = 1.0
-        self.params["M_POLE"] = 0.1
-        self.params["L"] = 0.5
-        self.params["F"] = 10
-        self.params["R"] = 0
-        self.params["S"] = 5
-        self.params["VIDEO_PREFIX"] = ""
-        if params is not None:
-            for k,v in params.items():
-                self.params[k] = float(v) if k != "VIDEO_PREFIX" else v
+        self.g = 9.8 
+        self.m_cart = 1.0
+        self.m_pole = 0.1
+        self.l = 0.5
+        self.f = 10
+        self.r = 0
+        self.s = 5
+        self.video_prefix = ""
+
             
            
             
@@ -67,14 +66,14 @@ class Cartpole(Environment):
             reward - reward for this transition
         """
         # Direction of the force
-        force = self.params["F"]
+        force = self.f
         if (action == 0):
-            force = -self.params["F"]
+            force = -self.f
 
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
-        n_tau = 100
-        delta_t = 0.01
+        n_tau = N_TAU
+        delta_t = DELTA_T
         tau = delta_t / n_tau
         for i in range(n_tau):
             # Physics -> See wiki for the formulas
@@ -83,36 +82,27 @@ class Cartpole(Environment):
             cos_theta = np.cos(theta)
             sin_theta = np.sin(theta)
         
-        lhs_mat = np.array([[self.params["M_POLE"] + self.params["M_CART"], self.params["M_POLE"]*self.params["L"] * cos_theta],[cos_theta,-self.params["L"]]])
-        rhs_mat = np.array([force - self.params["M_POLE"]*self.params["L"]*theta_dot*theta_dot*sin_theta, - self.params["G"]*sin_theta])
-        sols = np.linalg.solve(lhs_mat,rhs_mat)
-        x_dd = sols[0]
-        theta_dd = sols[1]
-        """
-        f_cart = self.params["MU_C"] * np.sign(x_dot)
-        f_pole = self.params["MU_P"] * theta_dot / (self.params["M_POLE"]*self.params["L"])
+            lhs_mat = np.array([[self.m_pole + self.m_cart, self.m_pole*self.l * cos_theta],[cos_theta,-self.l]])
+            rhs_mat = np.array([force - self.m_pole*self.l*theta_dot*theta_dot*sin_theta, - self.g*sin_theta])
+            sols = np.linalg.solve(lhs_mat,rhs_mat)
+            x_dd = sols[0]
+            theta_dd = sols[1]
+   
 
-        tmp = (force + self.params["M_POLE"]*self.params["L"]*sin_theta*theta_dot**2 - f_cart) \
-              / (self.params["M_POLE"] + self.params["M_CART"])
-        theta_dd = (self.params["G"]*sin_theta - cos_theta*tmp - f_pole) \
-                   / (self.params["L"]*(4/3. - self.params["M_POLE"]*cos_theta**2/(self.params["M_POLE"] + self.params["M_CART"]))) 
-        x_dd = tmp - self.params["M_POLE"]*theta_dd*cos_theta/(self.params["M_POLE"] + self.params["M_CART"])
-        """
-
-        # Update observation vector
-        self._last_observation = [
-            x + tau*x_dot,
-            x_dot + tau*x_dd,
-            self._to_range(theta + tau*theta_dot),
-            theta_dot + tau*theta_dd,
-            ]
+            # Update observation vector
+            self._last_observation = [
+                x + tau*x_dot,
+                x_dot + tau*x_dd,
+                self._to_range(theta + tau*theta_dot),
+                theta_dot + tau*theta_dd,
+                ]
     
         # Simple reward
         reward = - abs(theta) 
         reward -= abs(self._last_observation[0])/2.
      
-        # The cart cannot move beyond -5 or 5
-        S = float(self.params["S"])
+        # The cart cannot move beyond -S or S
+        S = float(self.s)
         if(self._last_observation[0]<-S):
             self._last_observation[0]=-S
         if(self._last_observation[0]>S):
@@ -123,11 +113,11 @@ class Cartpole(Environment):
     def convert_repr(self):
         lastobs = copy.deepcopy(self._last_observation)
     
-        if int(self.params["R"]) >= 1:
-            S = float(self.params["S"])
+        if int(self.r) >= 1:
+            S = float(self.s)
             lastobs[0] = S + lastobs[0]
 
-        if int(self.params["R"]) >= 2:
+        if int(self.r) >= 2:
             lastobs[1] *= 0.0174533 
 
         return lastobs
@@ -144,12 +134,13 @@ class Cartpole(Environment):
         self._last_observation = [x, 0, theta, 0]
         return self._last_observation
         
-    def summarizePerformance(self, test_data_set):
+    def summarizePerformance(self, test_data_set, path_dump=None, prefix_file=""):
         """ This function is called at every PERIOD_BTW_SUMMARY_PERFS.
 
         Arguments:
             test_data_set - Simulation data returned by the agent.
         """
+        Environment.summarizePerformance(self,test_data_set, path_dump, prefix_file)
         print ("Summary Perf")
 
         # Save the data in the correct input format for video generation
@@ -158,7 +149,7 @@ class Cartpole(Environment):
         for i in range(1, 4):
             data[:,i] = observations[i - 1]
         data[:,0]=np.arange(len(observations[0]))*0.02
-        save_mp4(data, self._video, self.params["VIDEO_PREFIX"])
+        save_mp4(data, self._video, self.path_dump + "/" + prefix_file)
         self._video += 1
         return
 

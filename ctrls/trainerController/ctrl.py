@@ -21,21 +21,23 @@ class TrainerController(Controller):
     def __init__(self, evaluate_on='action', periodicity=1, show_episode_avg_V_value=True, show_avg_Bellman_residual=True):
         """Initializer.
         """
+        super(self.__class__, self).__init__()
         show_episode_avg_V_value = bool(show_episode_avg_V_value)
         show_avg_Bellman_residual = bool(show_avg_Bellman_residual)
         periodicity = int(periodicity)
-        super(self.__class__, self).__init__()
+        
         self._count = 0
         self._periodicity = periodicity
         self._show_avg_Bellman_residual = show_avg_Bellman_residual
         self._show_episode_avg_V_value = show_episode_avg_V_value
 
-        self._on_action = 'action' == evaluate_on
-        self._on_episode = 'episode' == evaluate_on
-        self._on_epoch = 'epoch' == evaluate_on
+        self._on_action = "action" == evaluate_on
+        self._on_episode = "episode" == evaluate_on
+        self._on_epoch = "epoch" == evaluate_on
         if not self._on_action and not self._on_episode and not self._on_epoch:
             self._on_action = True
-
+        
+        
     def onStart(self, agent):
         if (self._active == False):
             return
@@ -68,6 +70,5 @@ class TrainerController(Controller):
 
     def _update(self, agent):
         if self._periodicity <= 1 or self._count % self._periodicity == 0:
-            print("hello")
             agent.train()
         self._count += 1
