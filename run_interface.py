@@ -18,32 +18,34 @@ class RunInterface(object):
        self.lst_common=[]
 
     def common_args(self,p):
-       for c in self.lst_common:
-           d = parse_conf("cfgs/arg/common/"+c)
+       d = parse_conf("cfgs/run/common")
+       d = {k: v for k, v in d.items() if k in self.lst_common}
+       for k,v in d.items():
+           kwargs = v
            try:
-                if d["type"] == "int":
-                    d["type"] = int
+                if kwargs["type"] == "int":
+                    kwargs["type"] = int
                 elif d["type"] == "float":
-                    d["type"] = float
+                    kwargs["type"] = float
            except:
                 pass
 
-           p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
+           p.add_argument("--" + self.__class__.__name__.lower() + "-" + k, **kwargs)
        
     def args(self,p):
-       path = "cfgs/arg/" + self.__class__.__name__.lower() + "/"
-       if not isdir(path): return
-       commands = [f for f in listdir(path) if isfile(join(path, f))]
-       for c in commands:
-           d = parse_conf(path+c)
+       path = "cfgs/run/" + self.__class__.__name__.lower()
+       if not isfile(path): return
+       d = parse_conf(path)
+       for k,v in d.items():
+           kwargs = v
            try:
-                if d["type"] == "int":
-                    d["type"] = int
-                elif d["type"] == "float":
-                    d["type"] = float
+                if kwargs["type"] == "int":
+                    kwargs["type"] = int
+                elif kwargs["type"] == "float":
+                    kwargs["type"] = float
            except:
                 pass    
-           p.add_argument("--" + self.__class__.__name__.lower() + "-" + c, **d)
+           p.add_argument("--" + self.__class__.__name__.lower() + "-" + k, **kwargs)
        
     def build(self):
        p = argparse.ArgumentParser(description=self.description)

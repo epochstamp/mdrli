@@ -1,0 +1,8 @@
+[[__many__]]
+        help = string(default="")
+        type = option('int','float','string',default='string')
+        action = string(default="")
+        dest = string(default="")
+	default = string(default="")
+	required = bool(default=False)
+	nargs = string(default=1)

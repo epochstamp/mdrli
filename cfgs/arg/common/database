@@ -1,3 +1,0 @@
-help=A DataSet dumped object. See runner documentation for usage.
-default=none
-dest=database

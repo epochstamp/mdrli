@@ -1,3 +1,0 @@
-help=Policy (state-to-action mapping) module
-default=randomPolicy
-dest=pol_module

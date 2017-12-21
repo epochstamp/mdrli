@@ -1,3 +1,0 @@
-help=Configuration file for neural network backend
-dest=backend_nnet_conf_file
-default=DEFAULT

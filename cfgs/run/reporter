@@ -1,0 +1,4 @@
+[env-report]
+	help="Activate environment reporting"
+	action=store_true
+	dest=env_report	

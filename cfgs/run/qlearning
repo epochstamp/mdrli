@@ -1,0 +1,39 @@
+[acontroller-cfg]
+    help=Configuration file for controllers to attach to the agent
+    default=DEFAULT
+    dest=acontroller_cfg
+[backend-nnet]
+    help=Neural network backend binded to neural network controller
+    default=n_deerfault
+    dest=backend_nnet
+[backend-nnet-conf-file]
+    help=Configuration file for neural network backend
+    dest=backend_nnet_conf_file
+    default=DEFAULT
+[batch-size]
+    help=Batch size for qlearning training phase
+    type=int
+    default=32
+    dest=batch_size
+[ctrl-conf-file]
+    help=Configuration file for neural network controller.
+    default=DEFAULT
+    dest=ctrl_conf_file
+[epochs]
+    help=Number of q-network learning epochs to perform
+    type=int
+    dest=epochs
+    default=10
+[max-steps-on-epoch]
+    help=Maximum number of episode step during an epoch. 0 is equivalent to batch mode rl
+    default=0
+    type=int
+    dest=max_steps_on_epoch
+[qnetw-module]
+    help=Neural network controller module
+    default=ctrl_deerfault
+    dest=qnetw_module
+[ctrl-neural-nets-conf-file]
+    help=Configuration file for neural network controller
+    dest=ctrl_neural_nets_conf_file
+    default=DEFAULT
