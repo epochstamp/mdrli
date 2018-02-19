@@ -14,11 +14,11 @@ import matplotlib.pyplot as plt
 PI = np.pi
 
 def save_mp4(data, n, video_prefix=""):
-    if (not os.path.exists('./img')):
-        os.makedirs('./img')
+    if (not os.path.exists(video_prefix + '_imgs')):
+        os.makedirs(video_prefix + '_imgs')
 
-    if (not os.path.exists('./video')):
-        os.makedirs('./video')
+    if (not os.path.exists(video_prefix + '_video')):
+        os.makedirs(video_prefix + '_video')
 
     # Create temporal layout at the bottom
     fig = plt.figure(0)
@@ -76,11 +76,11 @@ def save_mp4(data, n, video_prefix=""):
         if point[0] >= t + 1./fps or not t:
             _draw_point(point, time_bar, t, x_min, x_max, cart_plot)
             t = point[0]
-            fig.savefig('img/_tmp%03d.png' % frame_number)
+            fig.savefig(video_prefix + '_imgs/_tmp%03d.png' % frame_number)
             frame_number += 1
 
     
-    print(os.system("ffmpeg -framerate 25 -i img/_tmp%03d.png  -c:v libx264 -pix_fmt yuv420p video/"+video_prefix+"_out" + str(n) + ".mp4"))
+    print(os.system("ffmpeg -framerate 25 -i "+video_prefix+"_imgs/_tmp%03d.png  -c:v libx264 -pix_fmt yuv420p "+video_prefix+"_video/_out" + str(n) + ".mp4"))
 
     return
 

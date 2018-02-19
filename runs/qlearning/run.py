@@ -27,11 +27,10 @@ class Qlearning(RunInterface):
 
     def initialize(self):
        self.description="Q-learning with a Q-network."
-       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module","database","pol-model"]
+       self.lst_common=["out-prefix","pol-conf-file","pol-module","rng","env-conf-file","env-module","database","pol-model","max-size-episode"]
 
     
     def run(self):
-
         if self.params.rng == -1:
                 seed = random.randrange(2**32 - 1)
         else:
@@ -95,11 +94,15 @@ class Qlearning(RunInterface):
                 v = cfg_ctrls[s]
                 controller = get_mod_object("ctrls",s,"ctrl",**v)
                 agent.attach(controller)  
-        agent.run(self.params.epochs, self.params.max_steps_on_epoch)
+        agent.run(self.params.epochs, self.params.max_size_episode)
         
         hashed = hashlib.sha1(str(pol_params).encode("utf-8") + str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
         todump = self.params.out_prefix + str(hashed)
         out = todump
+        try:
+                os.makedirs("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/")
+        except:
+                pass
         ctrl_neural_net.dumpTo("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump")
         
 if __name__=="__main__":

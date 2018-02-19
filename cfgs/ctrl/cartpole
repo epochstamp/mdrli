@@ -26,3 +26,13 @@
     evaluate_on=action
     periodicity=1
     reset_every=none
+
+[interleavedTestEpochController]
+    id=0
+    epoch_length=1000
+    controllers_to_disable=0,1,2,3,4 
+    periodicity=2
+    show_score=True
+    summarize_every=5
+    path_files=data/cartpole/
+    prefix_file=cart_test

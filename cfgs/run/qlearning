@@ -15,20 +15,11 @@
     type=int
     default=32
     dest=batch_size
-[ctrl-conf-file]
-    help=Configuration file for neural network controller.
-    default=DEFAULT
-    dest=ctrl_conf_file
 [epochs]
     help=Number of q-network learning epochs to perform
     type=int
     dest=epochs
     default=10
-[max-steps-on-epoch]
-    help=Maximum number of episode step during an epoch. 0 is equivalent to batch mode rl
-    default=0
-    type=int
-    dest=max_steps_on_epoch
 [qnetw-module]
     help=Neural network controller module
     default=ctrl_deerfault

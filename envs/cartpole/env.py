@@ -41,13 +41,13 @@ class Cartpole(Environment):
         #self._last_observation = [0, 0, 0, 0]
         self._input_dim = [(1,), (1,), (1,), (1,)]
         self._video = 0
-        self.g = 9.8 
-        self.m_cart = 1.0
-        self.m_pole = 0.1
-        self.l = 0.5
-        self.f = 10
-        self.r = 0
-        self.s = 5
+        self.g = g 
+        self.m_cart = m_cart
+        self.m_pole = m_pole
+        self.l = l
+        self.f = f
+        self.r = r
+        self.s = s
 
             
            

@@ -62,6 +62,7 @@ class RunInterface(object):
        except:
            args = None
        self.params = args
+       print(self.params)
        for k,v in vars(self.params).items():
            attr = getattr(self.params,k)
            if isinstance(attr, str) and attr.lower() == "none":
