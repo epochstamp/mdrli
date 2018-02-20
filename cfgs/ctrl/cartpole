@@ -29,10 +29,10 @@
 
 [interleavedTestEpochController]
     id=0
-    epoch_length=1000
+    epoch_length=200
     controllers_to_disable=0,1,2,3,4 
-    periodicity=2
+    periodicity=1
     show_score=True
-    summarize_every=5
+    summarize_every=10
     path_files=data/cartpole/
     prefix_file=cart_test

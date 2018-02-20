@@ -29,7 +29,7 @@ N_TAU=10
 DELTA_T=0.02
 
 class Cartpole(Environment):
-    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5):
+    def __init__(self, rng, g,m_cart,m_pole,l,f,r,s):
         """ Initialize environment.
 
         Arguments:
@@ -41,14 +41,13 @@ class Cartpole(Environment):
         #self._last_observation = [0, 0, 0, 0]
         self._input_dim = [(1,), (1,), (1,), (1,)]
         self._video = 0
-        self.g = g 
-        self.m_cart = m_cart
-        self.m_pole = m_pole
-        self.l = l
-        self.f = f
-        self.r = r
-        self.s = s
-
+        self.g = float(g)  
+        self.m_cart = float(m_cart)
+        self.m_pole = float(m_pole)
+        self.l = float(l)
+        self.f = float(f)
+        self.r = float(r)
+        self.s = float(s)
             
            
             
@@ -128,8 +127,26 @@ class Cartpole(Environment):
             mode - Not used in this example.
         """
         # Reset initial observation to a random x and theta
-        x = self._rng.uniform(-1, 1)
-        theta = self._rng.uniform(-PI, PI)
+        if mode == -1:
+            #Learning set 
+            print("coucou learning")
+            x = self._rng.uniform(-0.25, 0.25)
+            theta = self._rng.uniform(-PI/4, PI/4)
+        else:
+            if mode == 1:
+                #Validation set
+                ranges_x = [(-0.5,-0.25),(0.25,0.5)]
+                ranges_theta = [(-PI/2,-PI/4),(PI/4,PI/2)]
+            else:
+                #Test set
+                ranges_x = [(-1,-0.5),(0.5,1)]
+                ranges_theta = [(-PI,-PI/2),(PI/2,PI)]
+            range_x = ranges_x[self._rng.randint(len(ranges_x))]
+            range_theta = ranges_theta[self._rng.randint(len(ranges_theta))]
+            
+            x = self._rng.uniform(*range_x)
+            theta = self._rng.uniform(*range_theta)
+            
         self._last_observation = [x, 0, theta, 0]
         return self._last_observation
         

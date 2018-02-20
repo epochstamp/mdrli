@@ -42,6 +42,7 @@ class Qlearning(RunInterface):
         conf_ctrl_neural_nets_dir = "cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
         conf_backend_nnet_dir = "cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
         env_params = parse_conf(conf_env_dir)
+        env_params["rng"] = rng
         pol_params = parse_conf(conf_pol_dir)
         ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
         backend_nnet_params = parse_conf(conf_backend_nnet_dir)

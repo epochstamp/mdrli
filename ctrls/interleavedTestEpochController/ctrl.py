@@ -159,6 +159,10 @@ class InterleavedTestEpochController(Controller):
 
         self._epoch_count = 0
         self._summary_counter = 0
+        try:
+            os.makedirs(self._path_files)
+        except:
+            pass
         f = open(self._path_files + "/" + self._prefix_file + "_summary.csv", "w+")
         f.write("epoch;nb_episodes;r_mean;r_var;r_std\n")
         f.close()
