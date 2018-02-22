@@ -75,6 +75,7 @@ class NeuralAgent(object):
         self._Vs_on_last_episode = []
         self._in_episode = False
         self._selected_action = -1
+
         self._state = []
         for i in range(len(inputDims)):
             self._state.append(np.zeros(inputDims[i], dtype=config.floatX))
@@ -138,7 +139,14 @@ class NeuralAgent(object):
     def totalRewardOverLastTest(self):
         """ Returns the average sum of rewards per episode and the number of episode
         """
+             
         return self._total_mode_reward/self._totalModeNbrEpisode, self._totalModeNbrEpisode
+
+    def statRewardsOverLastTests(self):
+        """ Returns the average sum of rewards per episode and the number of episode
+        """
+           
+        return np.mean(self._mode_rewards),np.var(self._mode_rewards),np.std(self._mode_rewards), self._totalModeNbrEpisode
 
     def bestAction(self):
         """ Returns the best Action
@@ -159,20 +167,22 @@ class NeuralAgent(object):
     def mode(self):
         return self._mode
 
-    def startMode(self, mode, epochLength):
+    def startMode(self, mode, epochLength,n_episodes=None):
         if self._in_episode:
             raise AgentError("Trying to start mode while current episode is not yet finished. This method can be "
                              "called only *between* episodes for testing and validation.")
         elif mode == -1:
             raise AgentError("Mode -1 is reserved and means 'training mode'; use resumeTrainingMode() instead.")
         else:
+            self._n_episodes = self._n_episodes_init if n_episodes is None else n_episodes 
             self._mode = mode
             self._mode_epochs_length = epochLength
             self._total_mode_reward = 0.
             del self._tmp_dataset
             self._tmp_dataset = DataSet(self._environment, self._random_state, max_size=self._replay_memory_size, only_full_history=self._only_full_history)
 
-    def resumeTrainingMode(self):
+    def resumeTrainingMode(self,n_episodes = None):
+        self._n_episodes = self._n_episodes_init if n_episodes is None else self._n_episodes
         self._mode = -1
 
     def summarizeTestPerformance(self, **kwargs):
@@ -202,7 +212,7 @@ class NeuralAgent(object):
         except SliceError as e:
             warn("Training not done - " + str(e), AgentWarning)
 
-    def dumpNetwork(self, fname, nEpoch=-1):
+    def dumpNetwork(self,fname, nEpoch=-1, path="."):
         """ Dump the network
         
         Parameters
@@ -213,14 +223,14 @@ class NeuralAgent(object):
             Epoch number (Optional)
         """
         try:
-            os.mkdir("nnets")
+            os.makedirs(path + "/nnets")
         except Exception:
             pass
-        basename = "nnets/" + fname
+        basename = path + "/nnets/" + fname
 
-        for f in os.listdir("nnets/"):
+        for f in os.listdir(path + "/nnets/"):
             if fname in f:
-                os.remove("nnets/" + f)
+                os.remove(path +  "/nnets/" + f)
 
         all_params = self._network.getAllParams()
 
@@ -249,7 +259,7 @@ class NeuralAgent(object):
 
         self._network.setAllParams(all_params)
 
-    def run(self, n_epochs, epoch_length):
+    def run(self, n_epochs, epoch_length, n_episodes = 1):
         """
         This function encapsulates the whole process of the learning.
         It starts by calling the controllers method "onStart", 
@@ -264,20 +274,33 @@ class NeuralAgent(object):
         epoch_length : maximum number of steps for a given epoch
             int
         """
+        self._n_episodes = n_episodes
+        self._n_episodes_init = n_episodes
         for c in self._controllers: c.onStart(self)
         i = 0
         while i < n_epochs or self._mode_epochs_length > 0:
             self._training_loss_averages = []
-
+            
             if self._mode != -1:
                 self._totalModeNbrEpisode=0
-                while self._mode_epochs_length > 0:
-                    self._totalModeNbrEpisode += 1
-                    self._mode_epochs_length = self._runEpisode(self._mode_epochs_length)
+                self._mode_rewards = []
+                
+                while self._totalModeNbrEpisode < self._n_episodes:
+                    mode_epoch_length = self._mode_epochs_length 
+                    while mode_epoch_length > 0:
+                        self._totalModeNbrEpisode += 1
+                        mode_epoch_length = self._runEpisode(mode_epoch_length)
+                    
+                    self._mode_rewards.append(self._total_mode_reward)
+                    self._total_mode_reward = 0
+                self._mode_epochs_length = 0 
             else:
                 length = epoch_length
-                while length > 0:
-                    length = self._runEpisode(length)
+                n_episodes = self._n_episodes
+                while n_episodes > 0:               
+                    while length > 0:
+                        length = self._runEpisode(length)
+                    n_episodes -= 1
                 i += 1
             for c in self._controllers: c.onEpochEnd(self)
             

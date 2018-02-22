@@ -129,7 +129,6 @@ class Cartpole(Environment):
         # Reset initial observation to a random x and theta
         if mode == -1:
             #Learning set 
-            print("coucou learning")
             x = self._rng.uniform(-0.25, 0.25)
             theta = self._rng.uniform(-PI/4, PI/4)
         else:

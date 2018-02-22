@@ -34,7 +34,7 @@ class FindBestController(Controller):
         A unique filename (basename for score and network dumps).
     """
 
-    def __init__(self, validationID=0, testID=None, unique_fname="nnet"):
+    def __init__(self, validationID=0, testID=None, path_dump=".",unique_fname="nnet"):
         super(self.__class__, self).__init__()
         validationID = int(validationID)
         testID = None if testID is None else int(testID)
@@ -45,7 +45,12 @@ class FindBestController(Controller):
         self._testID = testID
         self._validationID = validationID
         self._filename = unique_fname
-        self._bestValidationScoreSoFar = -9999999
+        self._bestValidationScoreSoFar = -9999999	
+        self._path_dump = path_dump
+        try:
+            os.makedirs(self._path_dump + "/scores/")
+        except Exception:
+            pass
 
     def onEpochEnd(self, agent):
         if (self._active == False):
@@ -53,15 +58,15 @@ class FindBestController(Controller):
 
         mode = agent.mode()
         if mode == self._validationID:
-            score, _ = agent.totalRewardOverLastTest()
-            self._validationScores.append(score)
+            mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
+            self._validationScores.append((mean_score,std_score))
             self._epochNumbers.append(self._trainingEpochCount)
-            if score > self._bestValidationScoreSoFar:
-                self._bestValidationScoreSoFar = score
-                agent.dumpNetwork(self._filename, self._trainingEpochCount)
+            if mean_score - std_score > self._bestValidationScoreSoFar:
+                self._bestValidationScoreSoFar = mean_score - std_score
+                agent.dumpNetwork(self._filename, self._trainingEpochCount,self._path_dump)
         elif mode == self._testID:
-            score, _ = agent.totalRewardOverLastTest()
-            self._testScores.append(score)
+            mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
+            self._testScores.append((mean_score,std_score))
         else:
             self._trainingEpochCount += 1
         
@@ -69,14 +74,11 @@ class FindBestController(Controller):
         if (self._active == False):
             return
 
-        bestIndex = np.argmax(self._validationScores)
-        print("Best neural net obtained after {} epochs, with validation score {}".format(bestIndex+1, self._validationScores[bestIndex]))
+        bestIndex = np.argmax(list(map(lambda x : x[0] - x[1],self._validationScores)))
+        print("Best neural net obtained after {} epochs, with validation score {} (std : {})".format(bestIndex+1, self._validationScores[bestIndex][0],self._validationScores[bestIndex][1]))
         if self._testID != None:
-            print("Test score of this neural net: {}".format(self._testScores[bestIndex]))
+            print("Test score of this neural net: {} (std : {})".format(self._testScores[bestIndex][0],self._testScores[bestIndex][1]))
                 
-        try:
-            os.mkdir("scores")
-        except Exception:
-            pass
-        basename = "scores/" + self._filename
+
+        basename = self._path_dump + "scores/" + self._filename
         joblib.dump({"vs": self._validationScores, "ts": self._testScores}, basename + "_scores.jldump")
