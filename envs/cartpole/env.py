@@ -129,16 +129,16 @@ class Cartpole(Environment):
         # Reset initial observation to a random x and theta
         if mode == -1:
             #Learning set 
-            x = self._rng.uniform(-0.25, 0.25)
-            theta = self._rng.uniform(-PI/4, PI/4)
+            x = self._rng.uniform(-0.5, 0.5)
+            theta = self._rng.uniform(-PI/2, PI/2)
         else:
             if mode == 1:
                 #Validation set
-                ranges_x = [(-0.5,-0.25),(0.25,0.5)]
-                ranges_theta = [(-PI/2,-PI/4),(PI/4,PI/2)]
+                ranges_x = [(-0.75,-0.5),(0.5,0.75)]
+                ranges_theta = [(-3*PI/2,-PI/2),(PI/2,3*PI/2)]
             else:
                 #Test set
-                ranges_x = [(-1,-0.5),(0.5,1)]
+                ranges_x = [(-1,-0.75),(0.75,1)]
                 ranges_theta = [(-PI,-PI/2),(PI/2,PI)]
             range_x = ranges_x[self._rng.randint(len(ranges_x))]
             range_theta = ranges_theta[self._rng.randint(len(ranges_theta))]

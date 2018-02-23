@@ -40,6 +40,7 @@ def get_mod_object(folder,module,modtype,*args,**kwargs):
         try:
                 return getattr(mod, capitalizeFirstLetter(module))(*args)
         except:
+                print (kwargs)
                 return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
 
 
