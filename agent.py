@@ -94,9 +94,14 @@ class NeuralAgent(object):
         else:
             self._test_policy = test_policy
 
-    def setEnvironment(self,e):
+    def setEnvironment(self,e,reset=False):
+        """ Change the environment and the related dataset
+        """
         self._e = e
         self._dataset = self._datasets[self._e]
+        if reset:
+            #Todo : flush dataset
+            pass
         self._environment = self._environments[self._e]
 
     def setControllersActive(self, toDisable, active):
