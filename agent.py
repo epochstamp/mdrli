@@ -49,7 +49,7 @@ class NeuralAgent(object):
         observations before the beginning of the episode
     """
 
-    def __init__(self, environment, q_network, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, test_policy=None, only_full_history=True):
+    def __init__(self, environments, q_networks, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, test_policy=None, only_full_history=True,init_env=0):
         inputDims = environment.inputDimensions()
         
         if replay_start_size == None:
@@ -58,15 +58,21 @@ class NeuralAgent(object):
             raise AgentError("Replay_start_size should be greater than the biggest history of a state.")
         
         self._controllers = []
-        self._environment = environment
-        self._network = q_network
+        self._environments = environments
+        self._networks = q_networks
+        self._e = init_env
+        self._environment = environments[self._e]
+        self._network = self._networks[self._e]
         self._replay_memory_size = replay_memory_size
         self._replay_start_size = replay_start_size
         self._batch_size = batch_size
         self._random_state = random_state
         self._exp_priority = exp_priority
         self._only_full_history = only_full_history
-        self._dataset = DataSet(environment, max_size=replay_memory_size, random_state=random_state, use_priority=self._exp_priority, only_full_history=self._only_full_history)
+        self._datasets = list()
+        for i in range(len(self._environments)):
+            self._datasets.append(DataSet(environment, max_size=replay_memory_size, random_state=random_state, use_priority=self._exp_priority, only_full_history=self._only_full_history))
+        self._dataset = self._datasets[self._e]
         self._tmp_dataset = None # Will be created by startTesting() when necessary
         self._mode = -1
         self._mode_epochs_length = 0
@@ -87,6 +93,11 @@ class NeuralAgent(object):
             self._test_policy = EpsilonGreedyPolicy(q_network, environment.nActions(), random_state, 0.)
         else:
             self._test_policy = test_policy
+
+    def setEnvironment(self,e):
+        self._e = e
+        self._dataset = self._datasets[self._e]
+        self._environment = self._environments[self._e]
 
     def setControllersActive(self, toDisable, active):
         """ Activate controller
