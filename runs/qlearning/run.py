@@ -45,6 +45,7 @@ class Qlearning(RunInterface):
         env_params["rng"] = rng
         pol_params = parse_conf(conf_pol_dir)
         ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
+        ctrl_neural_nets_params["double_q"] = ctrl_neural_nets_params["double_q"] == "True" 
         backend_nnet_params = parse_conf(conf_backend_nnet_dir)
         env = get_mod_object("envs",self.params.env_module,"env",rng, **env_params)
         pol = get_mod_object("pols",self.params.pol_module,"pol",env.nActions(),rng, **pol_params)
@@ -83,7 +84,7 @@ class Qlearning(RunInterface):
         test_policy = GreedyPolicy(env.nActions(),rng)
         test_policy.setAttribute("model",ctrl_neural_net)
         ctrl_neural_net._batch_size = self.params.batch_size
-        agent = NeuralAgent(env, ctrl_neural_net, replay_memory_size=1000000, replay_start_size=max(env.inputDimensions()[i][0] for i in range(len(env.inputDimensions()))), batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
+        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=1000000, replay_start_size=max(env.inputDimensions()[i][0] for i in range(len(env.inputDimensions()))), batch_size=self.params.batch_size, random_state=rng, exp_priority=0, train_policy=pol, test_policy=test_policy, only_full_history=True)
         if data is not None:
                 agent._dataset = dataset
         

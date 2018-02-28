@@ -23,7 +23,8 @@ class DataSet(object):
         self._size = max_size
         self._use_priority = use_priority
         self._only_full_history = only_full_history
-        if ( isinstance(env.nActions(),int) ):
+        self._action_is_discrete = isinstance(env.nActions(),int)
+        if self._action_is_discrete:
             self._actions      = CircularBuffer(max_size, dtype="int8")
         else:
             self._actions      = CircularBuffer(max_size, dtype='object')
@@ -44,6 +45,24 @@ class DataSet(object):
             self._random_state = random_state
 
         self.n_elems  = 0
+
+    def reset(self):
+        """Flush circular buffers."""
+        
+        #Flush buffers
+        if ( self._type_action,int ):
+            self._actions      = CircularBuffer(max_size, dtype="int8")
+        else:
+            self._actions      = CircularBuffer(max_size, dtype='object')
+        self._observations = np.zeros(len(self._batch_dimensions), dtype='object')
+        for i in range(len(self._batch_dimensions)):
+            self._observations[i] = CircularBuffer(max_size, elemShape=self._batch_dimensions[i][1:], dtype=env.observationType(i))
+        self._rewards = CircularBuffer(self._size)
+        self._terminals = CircularBuffer(self._size, dtype="bool")
+        #Flush priority trees
+        if (self._use_priority):
+            self._prioritiy_tree = tree.SumTree(self._size) 
+            self._translation_array = np.zeros(self._size)
 
     def actions(self):
         """Get all actions currently in the replay memory, ordered by time where they were taken."""

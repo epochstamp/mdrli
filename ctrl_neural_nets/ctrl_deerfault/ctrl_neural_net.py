@@ -46,8 +46,10 @@ class Ctrl_deerfault(QNetwork):
         """ Initialize environment
         
         """
-        QNetwork.__init__(self,environment, batch_size)
 
+        QNetwork.__init__(self,environment, batch_size)
+        print(double_Q)
+        print("yo yo")
         
         self._rho = rho
         self._rms_epsilon = rms_epsilon
@@ -218,7 +220,7 @@ class Ctrl_deerfault(QNetwork):
 
         return np.argmax(q_vals),np.max(q_vals)
         
-    def _compile(self):
+    def _compile(self,loss='mse'):
         """ compile self.q_vals
         """
         if (self._update_rule=="sgd"):
@@ -228,7 +230,7 @@ class Ctrl_deerfault(QNetwork):
         else:
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
         
-        self.q_vals.compile(optimizer=optimizer, loss='mse')
+        self.q_vals.compile(optimizer=optimizer, loss=loss)
 
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):
