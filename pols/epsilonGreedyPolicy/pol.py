@@ -1,7 +1,6 @@
 from pols.policy import Policy
 from pols.randomPolicy.pol import RandomPolicy
 from pols.greedyPolicy.pol import GreedyPolicy
-from utils import parse_conf
 
 class EpsilonGreedyPolicy(Policy):
 

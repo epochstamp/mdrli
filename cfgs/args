@@ -26,11 +26,6 @@
     type=int
     default=0
     dest=exp_priority
-[n-episodes]
-    help=Number of episodes to play. Usage may vary among runners.
-    default=1000
-    type=int
-    dest=n_episodes
 [out-prefix]
     help=Prefix of output file
     dest=out_prefix
@@ -40,11 +35,6 @@
     type=int
     default=-1
     dest=rng
-[threads]
-    help= Activate multi-threading with n cores. 
-    default=1
-    type=int
-    dest=threads
 [backend-nnet]
     help=Neural network backend binded to neural network controller
     default=n_deerfault

@@ -15,7 +15,7 @@ from warnings import warn
 from data.dataset import DataSet,SliceError
 from ctrls.controller import Controller
 from deer.helper import tree 
-from deer.policies import EpsilonGreedyPolicy
+from pols.epsilonGreedyPolicy.pol import EpsilonGreedyPolicy
 
 class NeuralAgent(object):
     """The NeuralAgent class wraps a deep Q-network for training and testing in a given environment.
@@ -89,12 +89,13 @@ class NeuralAgent(object):
             for j in range(len(inputDims)):
                 self._states[i].append(np.zeros(inputDims[j], dtype=config.floatX))
             if (train_policy==None):
-                self._train_policy = EpsilonGreedyPolicy(q_networks[i], self._environments[i].nActions(), random_state, 0.1)
+                self._train_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.1)
+                self._train_policy.setAttribute("model",q_networks[i])
             else:
                 #Todo : change the number of actions. Listify the policies
                 self._train_policy = train_policy
             if (test_policy==None):
-                self._test_policy = EpsilonGreedyPolicy(q_networks[i], self._environments[i].nActions(), random_state, 0.)
+                self._test_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.)
             else:
                 #Todo : change the number of actions
                 self._test_policy = test_policy
