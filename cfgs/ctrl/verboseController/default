@@ -1,0 +1,3 @@
+evaluateOn=False
+evaluate_on=epoch
+periodicity=1

@@ -1,0 +1,6 @@
+initial_e=1.0 
+e_decays=10000 
+e_min=0.1
+evaluate_on=action
+periodicity=1
+reset_every=none

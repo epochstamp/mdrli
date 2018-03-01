@@ -32,16 +32,18 @@ def list_classes_module_with_parent(modulefile,parent):
             cls.append(name)
         return cls
 
-def get_mod_object(folder,module,modtype,*args,**kwargs):
+def get_mod_object(folder,module,modtype,args,kwargs):
     mod = __import__(folder + "." + module + "." + modtype, fromlist=[capitalizeFirstLetter(module)])
+
+     
+
     try:
         return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
     except:
         try:
-                return getattr(mod, capitalizeFirstLetter(module))(*args)
+                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)        
         except:
-                print (kwargs)
-                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)
+                return getattr(mod, capitalizeFirstLetter(module))(*args)
 
 
 
@@ -79,15 +81,25 @@ def parse_conf(conf_file, get_sections=False):
     directory = os.path.dirname(conf_file)
     validator = Validator()
     try:
-        params = ConfigObj(conf_file, directory + "/validator")
+        params = ConfigObj(conf_file, configspec=directory + "/validator")
         params.validate(validator, copy=True)
-    except:
+        print("hello")
+    except Exception as e:
+        print(e)
         params = ConfigObj(conf_file)
     if get_sections:
         cfgparser = ConfigParser()
         cfgparser.read_file(open(conf_file))
         return params, cfgparser.sections()
     return params
+
+def write_conf(conf_dict,conf_file):
+    config = ConfigObj()
+    config.filename = conf_file
+    for k,v in conf_dict.items():
+       config[k] = v
+    config.write()
+    
 
 def copy_rename(old_file_name, new_file_name):
         src_dir= os.curdir

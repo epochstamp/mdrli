@@ -1,0 +1,6 @@
+initial_e=float(0,1,default=1.0) 
+e_decays=integer(default=10000) 
+e_min=float(0,1,default=0.1)
+evaluate_on=option(action,epoch,episode,default=action)
+periodicity=integer(min=1,default=1)
+reset_every=option(none,episode,epoch,default=none)

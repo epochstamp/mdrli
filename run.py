@@ -1,48 +1,161 @@
 import sys
 import logging
+import random
 import numpy as np
+from joblib import dump,load
+import json
+from random import randint
+import hashlib
+from utils.utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump, parse_conf, flatten, write_conf
 import argparse
-sys.path.insert(0, 'utils/')
-from utils import get_mod_object
-from run_interface import RunInterface
+from data.dataset import DataSet
+from shutil import copyfile
+from joblib import load,dump
+from deer.agent import NeuralAgent
+import deer.experiment.base_controllers as bc
+from pols.greedyPolicy.pol import GreedyPolicy
+from copy import deepcopy
+from agent import NeuralAgent
+import os
+from pprint import pprint
+from os.path import isfile
 import traceback
+from os import remove
+def custom_bool(arg):
+        return arg == "True"
 
-
-class Run(RunInterface):
+class Run(object):
        
-    def initialize(self):
-       self.description="Executes sequentially a list of routines with their options indicated by command-line input"
-       self.lst_common=[]
+    def __init__(self):
+       self.initialize()
 
-                
+    def initialize(self):
+       self.description="Main script."
+
+       
+    def args(self,p):
+       path = "cfgs/args"
+       if not isfile(path): return
+       d = parse_conf(path)
+       for k,v in d.items():
+           kwargs = v
+           try:
+                if kwargs["type"] == "int":
+                    kwargs["type"] = int
+                elif kwargs["type"] == "float":
+                    kwargs["type"] = float
+                elif kwargs["type"] == "bool":
+                    kwargs["type"] = custom_bool
+           except:
+                pass   
+           p.add_argument("--" + k, **kwargs)
+       
+    def build(self):
+       self.parser = argparse.ArgumentParser(description=self.description)
+       try:
+           self.args(self.parser)
+       except argparse.ArgumentError as ae:
+           print("Check cfgs/args file, it seems there is an issue there.")
+           exit(-1)
+
+       
+       try:
+           args = self.parser.parse_args()
+       except Exception as e:
+           self.parser.error(message=e)
+       
+       self.params = args
+       print(self.params)
+       for k,v in vars(self.params).items():
+           attr = getattr(self.params,k)
+           if isinstance(attr, str) and attr.lower() == "none":
+                setattr(self.params,k,None) 
+       
+    def print_help(self):
+        self.parser.print_help()
        
     def run(self):
-        runners = []
-        flat_runs = [item for sublist in getattr(self.params, "runs") for item in sublist]
-        display_help = self.params.man
-        for r in flat_runs:
-            runner = get_mod_object("runs",r,"run") 
-            runner.build()
-            runners.append(runner)
-        for r in runners:
-            if not display_help:
-                try:
-                    r.run()
-                except AttributeError as e:
-                    r.print_help()
-                    raise AttributeError("Check your command-line arguments, you got the following error : " + str(e))
-            else:
-                r.print_help()
+        if self.params.rng == -1:
+                seed = random.randrange(2**32 - 1)
+        else:
+                seed = int(self.params.rng)
+        rng = np.random.RandomState(seed)
+    
+        conf_env_dir = "cfgs/env/" + self.params.env_module + "/" + self.params.env_conf_file
+        conf_ctrl_neural_nets_dir = "cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
+        conf_backend_nnet_dir = "cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
+        env_params = parse_conf(conf_env_dir)
+        env_params["rng"] = rng
+        ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
+        backend_nnet_params = parse_conf(conf_backend_nnet_dir)
+        env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params)
+
+        backend_nnet_params["input_dimensions"] = env.inputDimensions()
+        backend_nnet_params["n_actions"] = env.nActions()
+        backend_nnet_params["random_state"] = rng
+        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", tuple(), backend_nnet_params)
+        ctrl_neural_nets_params["random_state"] = rng
+        ctrl_neural_nets_params["neural_network"] = neural_net
+        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,), ctrl_neural_nets_params)
+                                
+        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=max(env.inputDimensions()[i][0] for i in range(len(env.inputDimensions()))), batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, only_full_history=self.params.only_full_history)
+       
+
+
+        for tc in self.params.controllers:
+                len_tc = len(tc)                
+                s = tc[0]
+                redo_conf = False
+                if len_tc >= 2:
+                    
+                    #Test if sc is a config file or an argument to override
+                    if '=' not in tc[1]:
+                        #This is a config file
+                        conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/" + tc[1])
+                        print(conf_ctrl)
+                    else:
+                        conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
+                        sc = tc[1].split("=")
+                        if sc[0] in conf_ctrl.keys():
+                            conf_ctrl[sc[0]] = sc[1]
+                            redo_conf = True
+                        else:
+                            print ("Warning : parameter " + str(sc[0]) + " is not included in config specs for the controller " + s)
+
+                    if len_tc > 2:
+                        remainder = tc[2:]
+                        for a in remainder:
+                             sc = a.split("=")
+                             if len(sc) != 2:
+                                 print ("Warning : arg " + a + " for controller parametrization is ill_formed. It needs to be in the form key=value.") 
+                             else:
+                                 redo_conf = True
+                                 if sc[0] in conf_ctrl.keys():
+                                    conf_ctrl[sc[0]] = sc[1]
+                                 else:
+                                    print ("Warning : parameter " + str(sc[0]) + " is not included in config specs for the controller " + s)
+                    #Create a temporary config file with the erased parameter and go through parse_conf again
+                    if redo_conf:
+                        write_conf(conf_ctrl, "cfgs/ctrl/" + s + "/temp")
+                        conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/temp")
+                        os.remove("cfgs/ctrl/" + s + "/temp") 
+                    
+                else:
+                    conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
+                print(s,conf_ctrl)
+                controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl)
+                agent.attach(controller)
+  
+        agent.run(self.params.epochs, self.params.max_size_episode)
         
-            """
-            flat_runs = [item for sublist in getattr(self.params, arg) for item in sublist]
-            for r in flat_runs:
-                runner = get_mod_object("runs",r,"run") 
-                runner.build()
-                runners.append(runner)
-            for r in runners:
-                r.run()
-            """
+        hashed = hashlib.sha1(str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
+        todump = self.params.out_prefix + str(hashed)
+        out = todump
+        try:
+                os.makedirs("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/")
+        except:
+                pass
+        ctrl_neural_net.dumpTo("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump")
                 
                 
            

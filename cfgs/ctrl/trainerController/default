@@ -1,0 +1,3 @@
+evaluate_on=action
+show_episode_avg_V_value=True
+show_avg_Bellman_residual=True

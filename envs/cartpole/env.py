@@ -21,7 +21,6 @@ sys.path.insert(0, 'utils/cartpole')
 sys.path.insert(0, 'utils')
 from render_movie import save_mp4
 from envs.env import Environment
-from utils import parse_conf
 # Physics constants
 PI = np.pi
 
@@ -29,7 +28,7 @@ N_TAU=10
 DELTA_T=0.02
 
 class Cartpole(Environment):
-    def __init__(self, rng, g,m_cart,m_pole,l,f,r,s):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5):
         """ Initialize environment.
 
         Arguments:

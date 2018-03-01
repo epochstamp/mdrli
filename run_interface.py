@@ -17,23 +17,9 @@ class RunInterface(object):
        self.description=""
        self.lst_common=[]
 
-    def common_args(self,p):
-       d = parse_conf("cfgs/run/common")
-       d = {k: v for k, v in d.items() if k in self.lst_common}
-       for k,v in d.items():
-           kwargs = v
-           try:
-                if kwargs["type"] == "int":
-                    kwargs["type"] = int
-                elif d["type"] == "float":
-                    kwargs["type"] = float
-           except:
-                pass
-
-           p.add_argument("--" + self.__class__.__name__.lower() + "-" + k, **kwargs)
        
     def args(self,p):
-       path = "cfgs/run/" + self.__class__.__name__.lower()
+       path = "cfgs/args"
        if not isfile(path): return
        d = parse_conf(path)
        for k,v in d.items():

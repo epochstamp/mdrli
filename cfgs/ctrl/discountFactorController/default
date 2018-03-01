@@ -1,0 +1,4 @@
+initial_discount_factor=0.9
+discount_factor_growth=0.99
+discount_factor_max=0.95
+periodicity=1

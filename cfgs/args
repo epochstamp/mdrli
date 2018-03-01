@@ -1,0 +1,78 @@
+[env-module]
+    help=Environment module(s). Each module `env_module` from env_modules is located at envs/`env_module`/env.py and has to encapsulate a class for which the name has to be `env_module` with first capitalized letter (e.g. Foo will be extracted from envs/foo/env.py)
+    required=True
+    dest=env_module
+[env-conf-file]
+    help=Environment configuration file. A configuration file for an environment encapsulated in `env_module` has to be located at at confs/conf_env/`env_module`/`name` where `name` is your configuration file
+    dest=env_conf_file
+    default=DEFAULT
+[max-size-episode]
+    help=Maximum size of each episode. Usage may vary among runners.
+    type=int
+    default=50
+    dest=max_size_episode
+[only-full-history]
+    help=If activated, when there is an history, only train with data that contains a full history. Otherwise, fill with zeroes missing part of the history
+    type=bool
+    default=True
+    dest=only_full_history
+[replay-memory-size]
+    help=Replay memory size of the agent
+    type=int
+    default=1000000
+    dest=replay_memory_size
+[exp-priority]
+    help=0 for regular experience replay, 1 for prioritized experience replay
+    type=int
+    default=0
+    dest=exp_priority
+[n-episodes]
+    help=Number of episodes to play. Usage may vary among runners.
+    default=1000
+    type=int
+    dest=n_episodes
+[out-prefix]
+    help=Prefix of output file
+    dest=out_prefix
+    default=""
+[rng]
+    help=Random number generator seed. Chosen randomly when empty.
+    type=int
+    default=-1
+    dest=rng
+[threads]
+    help= Activate multi-threading with n cores. 
+    default=1
+    type=int
+    dest=threads
+[backend-nnet]
+    help=Neural network backend binded to neural network controller
+    default=n_deerfault
+    dest=backend_nnet
+[backend-nnet-conf-file]
+    help=Configuration file for neural network backend
+    dest=backend_nnet_conf_file
+    default=DEFAULT
+[batch-size]
+    help=Batch size for qlearning training phase
+    type=int
+    default=32
+    dest=batch_size
+[epochs]
+    help=Number of q-network learning epochs to perform
+    type=int
+    dest=epochs
+    default=10
+[qnetw-module]
+    help=Neural network controller module
+    default=ctrl_deerfault
+    dest=qnetw_module
+[ctrl-neural-nets-conf-file]
+    help=Configuration file for neural network controller
+    dest=ctrl_neural_nets_conf_file
+    default=DEFAULT
+[attach-controller]
+    help=Controllers to attach. Order matters. First sub argument is the name of the controller, second argument is the configuration file or the first overriding argument, and the remainder is argument overriding
+    dest=controllers
+    nargs=+
+    action=append

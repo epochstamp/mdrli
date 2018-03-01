@@ -22,6 +22,7 @@ from copy import deepcopy
 from agent import NeuralAgent
 import os
 from pprint import pprint
+from utils import parse_conf
 
 class Qlearning(RunInterface):
 
@@ -53,11 +54,6 @@ class Qlearning(RunInterface):
         data = self.params.database
         if data == "none":
                 data = None
-        elif data == "last":
-                try:
-                        data = open("data/" + self.params.env_module + "/last").read()
-                except: 
-                        data = None
         if data is not None:
                 dataset = load(data)
    

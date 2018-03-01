@@ -1,0 +1,4 @@
+validationID=1 
+testID=0
+unique_fname=cart_nnet
+path_dump=./

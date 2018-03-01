@@ -1,7 +1,7 @@
-# Montefiore Deep Reinforcement Learning Interface (mdrli)
+# LegoRL
 ## Overview
 
-MDRLI is an interface built on top of a fork based on [DeeR](https://github.com/VinF/deer/). It is a plugin based-system for which you can use (already existing or provided by your own) environments and deep reinforcement learning techniques (including transfer) together very easily from data generation to learning and test.
+LegoRL is an interface built on top of a fork based on [DeeR](https://github.com/VinF/deer/). It is a plugin based-system for which you can use (already existing or provided by your own) environments and deep reinforcement learning techniques (including transfer) together very easily from data generation to learning and test.
 
 ## Dependencies
 
@@ -23,39 +23,20 @@ You will need the following dependencies :
  
  ## How To Start
  
- Everything starts by the following bash command.
- 
- ```bash
-python run.py --runs-run `my_run` [`my_runs` ...]
-```
+ Run the command `python run.py` to get extensive help about arguments. We illustrate here how to run a complete deep RL workflow in environment Cartpole.
 
-To display help for each `my_run`, add argument --runs-man to the previous call.
+ Let us consider the following command : 
 
-
-Any argument to be provided to `my_run` always carries the prefix `--my-run-`.
-
-## Common Arguments
-
-  Available common command-line arguments are listed below.
-  - `env-module` : Module from which environment class (inherited from [Environment](https://github.com/VinF/deer/blob/master/deer/base_classes/Environment.py) is imported. Name of the class is required to match `env-module` with first letter capitalized.
-  - `env-conf-file` : Configuration file provided to environment object imported from `env-module`. See [ConfigObj](http://configobj.readthedocs.io/en/latest/configobj.html) documentation for full specs
-  - `max-size-episode` : Maximum size of an episode (related to reinforcement learning)
-  - `n-episodes` : Number of episodes to play (related to reinforcement learning)
-  - `out-prefix` : Prefix of output file encoded based on command line arguments.
-  - `rng` : Seed for random number generator. If seed = -1, a random seed is provided.
-  - `pol-module` : Module from which a policy class (inherited from [Policy](https://github.com/epochstamp/mdrli/tree/master/pols) will be imported. Name of the class is required to match `pol-module` with first letter capitalized.
-  
-## Runs
-
-Runs are located [here](https://github.com/epochstamp/mdrli/tree/master/runs). See `README.md`'s in each run folder for documentation.
-  
   
      
      
 ## How to contribute
 
-    This interface is plugin-based. Each `README.md`, if applies, provides instructions to grow the interface. Main acceptance criterion is genericity (i.e., does not apply only in a particular context). 
-
-     
-    
+    You can : 
  
+       - Add new environments in folder envs, following [Environment](https://github.com/epochstamp/mdrli/envs/env.py) abstract class specs in this [folder](https://github.com/epochstamp/mdrli/envs/)
+       - Add new controllers in folder ctrls, following [Controller](https://github.com/epochstamp/mdrli/ctrls/controller.py) abstract class specs in this [folder](https://github.com/epochstamp/mdrli/ctrls/)
+       - Add new neural networks controllers, following [QNetwork](https://github.com/epochstamp/mdrli/ctrl_neural_nets/ctrl_neural_net.py) abstract class specs in this [folder](https://github.com/epochstamp/mdrli/ctrl_neural_nets/),
+       - Add new neural network backend in this [folder](https://github.com/epochstamp/mdrli/neural_nets/), as long as you implement the method _buildDQN and with which neural network controller is it compatible.
+    
+    Approval through pull request is subject to genericity, i.e. your contribution can be used across RL domains.

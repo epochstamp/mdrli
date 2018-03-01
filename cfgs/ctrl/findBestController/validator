@@ -1,0 +1,4 @@
+validationID=integer(default=1) 
+testID=integer(default=0)
+unique_fname=string(default=./)
+path_dump=string(default=./)

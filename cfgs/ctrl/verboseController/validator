@@ -1,0 +1,3 @@
+evaluateOn=boolean(default=False)
+evaluate_on=option(epoch,action,episode,default=epoch)
+periodicity=int(min=1,default=1)

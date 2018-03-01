@@ -1,0 +1,4 @@
+initial_discount_factor=float(0,1,default=0.9)
+discount_factor_growth=float(0,1,default=0.99)
+discount_factor_max=float(0,1,default=0.95)
+periodicity=integer(min=1,default=1)
