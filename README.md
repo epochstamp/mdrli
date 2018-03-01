@@ -23,9 +23,17 @@ You will need the following dependencies :
  
  ## How To Start
  
- Run the command `python run.py` to get extensive help about arguments. We illustrate here how to run a complete deep RL workflow in environment Cartpole.
+ Run the command `python run.py` to get extensive help about arguments. 
+
+ 
+
+ We illustrate here how to run a complete deep RL workflow in environment Cartpole.
 
  Let us consider the following command : 
+
+ `python run.py --out-prefix cartpole_best --env-module cartpole --env-conf-file cartpole_moon --max-size-episode 1000 --epochs 500 --rng 12345 --ctrl-neural-nets-conf-file doubleq --attach-controller epsilonController default initial_e=0.1`
+
+
 
   
      
