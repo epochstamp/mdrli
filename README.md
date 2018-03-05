@@ -1,7 +1,7 @@
 # LegoRL
 ## Overview
 
-LegoRL is an interface built on top of a fork based on [DeeR](https://github.com/VinF/deer/). It is a plugin based-system for which you can use (already existing or provided by your own) environments and deep reinforcement learning techniques (including transfer) together very easily from data generation to learning and test.
+LegoRL is a reinforcement learning plugin-based agent built on top of a fork based on [DeeR](https://github.com/VinF/deer/). A LegoRL agent may be mono or multi-task (which make easier implementation of transfer learning techniques) and use a Q-Network to learn. Furthermore, the LegoRL agent work with third-party classes (that are named "controllers") to perform exploration/exploitation routines (e.g. controlling learning rate, discount factor, €-exploration, and more...)  
 
 ## Dependencies
 
@@ -19,24 +19,26 @@ You will need the following dependencies :
  
  ## How To Install
  
- For the moment, just download this package. No need to install, you can directly work by the root of the package folder.
+ There is no setup, you can directly use the main script by running `python run.py`, which will give you an extensive help about arguments.
  
  ## How To Start
  
- Run the command `python run.py` to get extensive help about arguments. 
+ The only required argument is the environment module to consider. Here, we run a minimal example with Cartpole :
 
- 
+ `python run.py --env-module cartpole`.
 
- We illustrate here how to run a complete deep RL workflow in environment Cartpole.
+ However, while there is a Reinforcement Learning loop running with this command, only exploration is performed, and thus a neural network file with random weights is output. If you want to include training, you need to attach the appropriate controller as done below : 
 
- Let us consider the following command : 
+ `python run.py --env-module cartpole --attach trainerController`.
 
- `python run.py --out-prefix cartpole_best --env-module cartpole --env-conf-file cartpole_moon --max-size-episode 1000 --epochs 500 --rng 12345 --ctrl-neural-nets-conf-file doubleq --attach-controller epsilonController default initial_e=0.1`
+ Now learning is included in the RL loop. [Default configuration](https://github.com/epochstamp/mdrli/cfgs/ctrl/trainerController/default) will be used here. Below is the complete synopsis of adding a controller : 
+ `python run.py --env-module cartpole --attach trainerController [config_file | key=value] [key=value]^+` where the configuration file `config_file`, if provided, is loaded and the following arguments are used to override the values in `config_file`. Otherwise, the values are used to override those are defined in the default configuration file. Go to the [Controller folder](https://github.com/epochstamp/mdrli/ctrls/) to see which controllers you can include in the command. The controllers are executed sequentially according to the order in which they are declared in the command line. For example, when the following command is run, 
 
+`python run.py --env-module cartpole --attach epsilonController --attach trainerController`,
 
-
+the controller EpsilonController (which decreases linearly the €-exploration rate) will be executed before the trainerController.
   
-     
+    
      
 ## How to contribute
 
