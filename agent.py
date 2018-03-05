@@ -96,6 +96,7 @@ class NeuralAgent(object):
                 self._train_policy = train_policy
             if (test_policy==None):
                 self._test_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.)
+                self._test_policy.setAttribute("model",q_networks[i])
             else:
                 #Todo : change the number of actions
                 self._test_policy = test_policy
