@@ -12,6 +12,7 @@ from deer.q_networks.NN_keras import NN # Default Neural network used
 from keras.models import load_model
 from joblib import dump,load
 import os
+from copy import deepcopy
 
 class Ctrl_deerfault(QNetwork):
     """
@@ -219,6 +220,15 @@ class Ctrl_deerfault(QNetwork):
         q_vals = self.qValues(state)
 
         return np.argmax(q_vals),np.max(q_vals)
+
+    def getCopy():
+        """Return a copy of the current
+        """
+        self.dumpTo()
+        copycat = deepcopy(self)
+        copycat.load()
+        return copycat
+        
         
     def _compile(self,loss='mse'):
         """ compile self.q_vals

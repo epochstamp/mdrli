@@ -1,0 +1,3 @@
+w_mse = float(0,1,default=0.1)
+w_kld = float(0,1,default=0.9)
+w_decays = int(min=0,default=10000)

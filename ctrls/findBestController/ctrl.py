@@ -64,6 +64,7 @@ class FindBestController(Controller):
             if mean_score - std_score > self._bestValidationScoreSoFar:
                 self._bestValidationScoreSoFar = mean_score - std_score
                 agent.dumpNetwork(self._filename, self._trainingEpochCount,self._path_dump)
+                agent.storeNetwork()
         elif mode == self._testID:
             mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
             self._testScores.append((mean_score,std_score))

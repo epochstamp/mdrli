@@ -61,7 +61,7 @@
     help=Configuration file for neural network controller
     dest=ctrl_neural_nets_conf_file
     default=DEFAULT
-[attach-controller]
+[attach]
     help=Controllers to attach. Order matters. First sub argument is the name of the controller, second argument is the configuration file or the first overriding argument, and the remainder is argument overriding
     dest=controllers
     nargs=+

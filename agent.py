@@ -58,6 +58,7 @@ class NeuralAgent(object):
         self._e = init_env
         self._environment = environments[self._e]
         self._network = self._networks[self._e]
+        self._network_memory = []
         self._replay_memory_size = replay_memory_size
         self._replay_start_size = replay_start_size
         self._batch_size = batch_size
@@ -265,6 +266,16 @@ class NeuralAgent(object):
             joblib.dump(all_params, basename + ".epoch={}".format(nEpoch))
         else:
             joblib.dump(all_params, basename, compress=True)
+
+    def storeNetwork(self):
+        """ Store a copy of the network in memory
+        """
+        self._network_memory.append(self._network.getCopy())
+ 
+    def getNetworks(self):
+        """ Store a copy of the network in memory
+        """
+        return self._network_memory
 
     def setNetwork(self, fname, nEpoch=-1):
         """ Set values into the network
