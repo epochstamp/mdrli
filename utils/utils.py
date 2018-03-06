@@ -38,7 +38,7 @@ def get_mod_object(folder,module,modtype,args,kwargs):
      
 
     try:
-        return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
+        return getattr(mod, capitalizeFirsFtLetter(module))(*args,**kwargs)
     except:
         try:
                 return getattr(mod, capitalizeFirstLetter(module))(**kwargs)        
@@ -83,9 +83,7 @@ def parse_conf(conf_file, get_sections=False):
     try:
         params = ConfigObj(conf_file, configspec=directory + "/validator")
         params.validate(validator, copy=True)
-        print("hello")
     except Exception as e:
-        print(e)
         params = ConfigObj(conf_file)
     if get_sections:
         cfgparser = ConfigParser()

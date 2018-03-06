@@ -2,7 +2,6 @@ import numpy as np
 import joblib
 import os
 from ctrls.controller import Controller
-from 
 
 class SkillKeeperController(Controller):
     """[Experimental] A controller that tries to avoid unstabilities by changing loss function on the fly. Whenever a "best" candidate model is spot, the loss function
@@ -35,7 +34,7 @@ class SkillKeeperController(Controller):
             return
 
         networks = agent.getNetworks()
-        diff = len(network) - len(self._pair_w)
+        diff = len(networks) - len(self._pair_w)
         for i in range(len(self._pair_w)):
                 #Decrease w_kld
                 self._pair_w[i][1] = max(0,self._pair_w[i][1] - self._w_mse_decay)
@@ -45,14 +44,13 @@ class SkillKeeperController(Controller):
                 self._pair_w.append((self._w_mse,self._w_kld))
 
         #Get data batch and store it in agent
-        states,_ = agent.generateAndStoreBatch()
-        
+        states,_,_,_,_,_ = agent.generateAndStoreBatch()
 
         for i in range(len(networks)):
                 network = networks[i]
                 w_mse,w_kld = self._pair_w[i]
                 if w_kld == 0 and w_mse == 1 :
-                    network._compile("mse")
+                    agent.network._compile("mse")
                 else:
                     q_targ = network.batchPredict(states)
-                    network._compile("skillkeeper_loss",w_kld,w_mse,q_targ)
+                    agent._network._compile("skillkeeper_loss",w_kld,w_mse,q_targ)

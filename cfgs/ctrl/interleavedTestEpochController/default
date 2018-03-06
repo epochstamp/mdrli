@@ -1,0 +1,9 @@
+id=0
+epoch_length=500
+controllers_to_disable=[]
+periodicity=1
+show_score=False
+summarize_every=-1
+path_files=./
+prefix_file=_
+number_tests=1

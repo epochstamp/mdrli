@@ -112,7 +112,6 @@ class Run(object):
                     if '=' not in tc[1]:
                         #This is a config file
                         conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/" + tc[1])
-                        print(conf_ctrl)
                     else:
                         conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
                         sc = tc[1].split("=")
@@ -142,7 +141,6 @@ class Run(object):
                     
                 else:
                     conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
-                print(s,conf_ctrl)
                 controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl)
                 agent.attach(controller)
   
