@@ -14,6 +14,12 @@ from joblib import dump,load
 import os
 from copy import deepcopy
 
+
+def skillkeeper_loss(w1,w2,y_targ,y_true,y_pred):
+        def loss(y_true,y_pred):
+                return w1*K.kullback_leibler_divergence(y_true,y_targ) + w2*K.mean_squared_logarithmic_error(y_true,y_pred)
+        return loss
+
 class Ctrl_deerfault(QNetwork):
     """
     Deep Q-learning network using Keras (with any backend)
@@ -192,6 +198,8 @@ class Ctrl_deerfault(QNetwork):
         # loss*self._n_actions = np.average(loss_ind)
         return np.sqrt(loss),loss_ind
 
+    def batchPredict(self, states_val):
+        return self.q_vals.predict(states_val.tolist())
 
     def qValues(self, state_val):
         """ Get the q values for one belief state
@@ -230,7 +238,7 @@ class Ctrl_deerfault(QNetwork):
         return copycat
         
         
-    def _compile(self,loss='mse'):
+    def _compile(self,loss='mse',*args):
         """ compile self.q_vals
         """
         if (self._update_rule=="sgd"):
@@ -240,7 +248,7 @@ class Ctrl_deerfault(QNetwork):
         else:
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
         
-        self.q_vals.compile(optimizer=optimizer, loss=loss)
+        self.q_vals.compile(optimizer=optimizer, loss=loss(*args))
 
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):

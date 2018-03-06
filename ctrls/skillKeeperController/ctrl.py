@@ -2,10 +2,12 @@ import numpy as np
 import joblib
 import os
 from ctrls.controller import Controller
+from 
 
 class SkillKeeperController(Controller):
     """[Experimental] A controller that tries to avoid unstabilities by changing loss function on the fly. Whenever a "best" candidate model is spot, the loss function
        is changed to a weighted one to take into account mse + kl divergence of the current learning model to the candidate model. 
+       It has to be called *before* actual training.
     
     Parameters
     ----------
@@ -42,13 +44,15 @@ class SkillKeeperController(Controller):
         for i in range(diff):
                 self._pair_w.append((self._w_mse,self._w_kld))
 
+        #Get data batch and store it in agent
+        states,_ = agent.generateAndStoreBatch()
+        
+
         for i in range(len(networks)):
                 network = networks[i]
                 w_mse,w_kld = self._pair_w[i]
-                
-                def skillkeeper_loss(network,y_true,y_pred):
-                        def loss(y_true,y_pred):
-                                pass
-                        return loss
-                network._compile(skillkeeper_loss)
-
+                if w_kld == 0 and w_mse == 1 :
+                    network._compile("mse")
+                else:
+                    q_targ = network.batchPredict(states)
+                    network._compile("skillkeeper_loss",w_kld,w_mse,q_targ)

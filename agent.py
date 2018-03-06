@@ -77,6 +77,7 @@ class NeuralAgent(object):
         self._Vs_on_last_episode = []
         self._in_episode = False
         self._selected_action = -1
+        self._selected_batch = None
 
         self._states = [None] * len(self._environments)
         for i in range(len(self._environments)):
@@ -219,6 +220,10 @@ class NeuralAgent(object):
 
         self._environment.summarizePerformance(self._tmp_dataset,**kwargs)
 
+    def generateAndStoreBatch(self):
+        self._selected_batch = self._dataset.randomBatch(self._batch_size, self._exp_priority)
+        return copy.deepcopy(self._selected_batch)
+
     def train(self):
         """
         This function selects a random batch of data (with self._dataset.randomBatch) and performs a 
@@ -231,7 +236,7 @@ class NeuralAgent(object):
             return
 
         try:
-            states, actions, rewards, next_states, terminals, rndValidIndices = self._dataset.randomBatch(self._batch_size, self._exp_priority)
+            states, actions, rewards, next_states, terminals, rndValidIndices = self._dataset.randomBatch(self._batch_size, self._exp_priority) if self._selected_batch is None else self._selected_batch
             loss, loss_ind = self._network.train(states, actions, rewards, next_states, terminals)
             self._training_loss_averages.append(loss)
             if (self._exp_priority):
