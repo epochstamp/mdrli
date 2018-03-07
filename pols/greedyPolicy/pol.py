@@ -18,8 +18,8 @@ class GreedyPolicy(ModelPolicy):
                 raise AttributeError("Model has not been set in this policy")
         try:
                 action, V = self._model.chooseBestAction(state)
-        except:
-                raise AttributeError("Model does not meet required specifications. See documentation to know how to make your model follow them.")
+        except Exception as e:
+                raise AttributeError("Model does not meet required specifications or is corrupted. Here is the error message : " + str(e))
         return action, V
 
 

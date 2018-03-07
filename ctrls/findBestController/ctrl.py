@@ -34,7 +34,7 @@ class FindBestController(Controller):
         A unique filename (basename for score and network dumps).
     """
 
-    def __init__(self, validationID=0, testID=None, path_dump=".",unique_fname="nnet"):
+    def __init__(self, validationID=1, testID=0, path_dump=".",unique_fname="nnet"):
         super(self.__class__, self).__init__()
         validationID = int(validationID)
         testID = None if testID is None else int(testID)
@@ -45,7 +45,7 @@ class FindBestController(Controller):
         self._testID = testID
         self._validationID = validationID
         self._filename = unique_fname
-        self._bestValidationScoreSoFar = -9999999	
+        self._bestValidationScoreSoFar = -9999999        
         self._path_dump = path_dump
         try:
             os.makedirs(self._path_dump + "/scores/")
@@ -57,11 +57,13 @@ class FindBestController(Controller):
             return
 
         mode = agent.mode()
+        print ("Mode is " + str(mode))
         if mode == self._validationID:
             mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
             self._validationScores.append((mean_score,std_score))
             self._epochNumbers.append(self._trainingEpochCount)
             if mean_score - std_score > self._bestValidationScoreSoFar:
+                print("Best neural network found")
                 self._bestValidationScoreSoFar = mean_score - std_score
                 agent.dumpNetwork(self._filename, self._trainingEpochCount,self._path_dump)
                 agent.storeNetwork()

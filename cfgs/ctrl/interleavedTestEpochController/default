@@ -1,6 +1,6 @@
 id=0
 epoch_length=500
-controllers_to_disable=[]
+controllers_to_disable=0,1
 periodicity=1
 show_score=False
 summarize_every=-1

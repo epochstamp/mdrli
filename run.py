@@ -143,7 +143,6 @@ class Run(object):
                     conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
                 controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl)
                 agent.attach(controller)
-  
         agent.run(self.params.epochs, self.params.max_size_episode)
         
         hashed = hashlib.sha1(str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()

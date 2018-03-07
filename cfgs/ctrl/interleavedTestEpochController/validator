@@ -1,6 +1,6 @@
 id=integer(default=0)
 epoch_length=integer(default=100)
-controllers_to_disable=int_list()
+controllers_to_disable=int_list(min=1)
 periodicity=integer(min=1,default=1)
 show_score=boolean(default=False)
 summarize_every=integer(min=-1,default=-1)

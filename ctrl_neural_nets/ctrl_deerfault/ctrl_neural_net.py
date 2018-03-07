@@ -14,10 +14,13 @@ from joblib import dump,load
 import os
 from copy import deepcopy
 
-
-def skillkeeper_loss(w1,w2,y_targ,y_true,y_pred):
+def skillkeeper_loss(ws,y_targs,y_true,y_pred):
         def loss(y_true,y_pred):
-                return w1*K.kullback_leibler_divergence(y_true,y_targ) + w2*K.mean_squared_logarithmic_error(y_true,y_pred)
+            a = ws[0] * K.mean_squared_error(y_true,y_pred)
+            #Normalize weights
+            for i in range(1,len(ws)):
+                a += ws[i]*K.kullback_leibler_divergence(y_true,y_targs[i])
+            return a
         return loss
 
 class Ctrl_deerfault(QNetwork):

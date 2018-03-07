@@ -20,37 +20,62 @@ class SkillKeeperController(Controller):
         Weight decay for w_kld
     """
 
-    def __init__(self, w_mse = 0.1, w_kld = 0.9, w_decays = 10000):
+    def __init__(self, evaluate_on="action",w_mse = 0.1, w_kld = 0.9, w_decays = 10000):
         super(self.__class__, self).__init__()
         self._w_mse = w_mse
         self._w_kld = w_kld
         self._w_decay_mse = 0 if w_decays == 0 else (1 - w_mse) / w_decays
         self._w_decay_kld = 0 if w_decays == 0 else (w_kld) / w_decays
-        self._pair_w = []
+        self._ws = [w_mse]
+        self._on_action = "action" == evaluate_on
+        self._on_episode = "episode" == evaluate_on
+        self._on_epoch = "epoch" == evaluate_on
+        if not self._on_action and not self._on_episode and not self._on_epoch:
+            self._on_action = True
+
+    def _perform(self,agent):
+        networks = agent.getNetworks()
         
+        if len(networks) == 0:
+            return
+        diff = len(networks) - len(self._ws)
+        for i in range(1,len(self._ws)):
+                #Decrease w_kld
+                self._ws[i] = max(0,self._ws[i] - self._w_mse_decay)
+        for i in range(diff):
+                self._ws.append(self._w_kld)
+
+        #Get data batch and store it in agent
+        states,_,_,_,_,_ = agent.generateAndStoreBatch()
+        q_targs = []
+        w_klds = []
+        for i in range(len(networks)):
+                network = networks[i]
+                w_kld = self._ws[i]
+                if w_kld > 0:
+                    q_targs.append(network.batchPredict(states))
+                w_klds.append(w_kld)
+        agent._network._compile("skillkeeper_loss",w_klds,q_targs)
+
+
+    def onEpisodeEnd(self, agent, terminal_reached, reward):
+        if (self._active == False):
+            return
+        
+        if self._on_episode:
+            self._perform(agent)
+
 
     def onEpochEnd(self, agent):
         if (self._active == False):
             return
 
-        networks = agent.getNetworks()
-        diff = len(networks) - len(self._pair_w)
-        for i in range(len(self._pair_w)):
-                #Decrease w_kld
-                self._pair_w[i][1] = max(0,self._pair_w[i][1] - self._w_mse_decay)
-                #Increase w_mse
-                self._pair_w[i][0] = min(1,self._w_mse_decay + self._pair_w[i][0])
-        for i in range(diff):
-                self._pair_w.append((self._w_mse,self._w_kld))
+        if self._on_epoch:
+            self._perform(agent)
 
-        #Get data batch and store it in agent
-        states,_,_,_,_,_ = agent.generateAndStoreBatch()
+    def onActionTaken(self, agent):
+        if (self._active == False):
+            return
 
-        for i in range(len(networks)):
-                network = networks[i]
-                w_mse,w_kld = self._pair_w[i]
-                if w_kld == 0 and w_mse == 1 :
-                    agent.network._compile("mse")
-                else:
-                    q_targ = network.batchPredict(states)
-                    agent._network._compile("skillkeeper_loss",w_kld,w_mse,q_targ)
+        if self._on_action:
+            self._perform(agent)

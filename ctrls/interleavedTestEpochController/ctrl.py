@@ -42,7 +42,8 @@ class InterleavedTestEpochController(Controller):
         self._periodicity = max(2,int(periodicity))
         id = int(id)
         self._epoch_length = int(epoch_length)
-        self._to_disable = list(map(int, controllers_to_disable))
+        self._to_disable = list(map(int,controllers_to_disable.split(",")))
+        print(self._to_disable)
         self._show_score = show_score == "True"
         self._epoch_count = 0
         self._id = int(id)
@@ -54,6 +55,7 @@ class InterleavedTestEpochController(Controller):
         self._number_tests = int(number_tests)
         self._path_files=path_files
         self._prefix_file = prefix_file
+        print(self._prefix_file)
 
         
     def onStart(self, agent):
