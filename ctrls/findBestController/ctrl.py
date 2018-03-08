@@ -57,16 +57,14 @@ class FindBestController(Controller):
             return
 
         mode = agent.mode()
-        print ("Mode is " + str(mode))
         if mode == self._validationID:
             mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
             self._validationScores.append((mean_score,std_score))
             self._epochNumbers.append(self._trainingEpochCount)
             if mean_score - std_score > self._bestValidationScoreSoFar:
-                print("Best neural network found")
                 self._bestValidationScoreSoFar = mean_score - std_score
                 agent.dumpNetwork(self._filename, self._trainingEpochCount,self._path_dump)
-                agent.storeNetwork()
+                agent.storeNetwork(score=mean_score - std_score)
         elif mode == self._testID:
             mean_score,_,std_score,_ = agent.statRewardsOverLastTests()
             self._testScores.append((mean_score,std_score))

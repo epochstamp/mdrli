@@ -5,7 +5,8 @@ Neural network using Keras (called by q_net_keras)
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Layer, Dense, Flatten, merge, Activation, Conv2D, MaxPooling2D, Reshape, Permute
+from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, Reshape, Permute, concatenate
+
 
 class N_deerfault():
     """
@@ -92,7 +93,7 @@ class N_deerfault():
                 outs_conv.append(input)
         
         if len(outs_conv)>1:
-            x = merge(outs_conv, mode='concat')
+            x = concatenate(outs_conv)
         else:
             x= outs_conv [0]
         
@@ -108,7 +109,7 @@ class N_deerfault():
         else:
             out = Dense(1)(x)
                 
-        model = Model(input=inputs, output=out)
+        model = Model(inputs=inputs, outputs=out)
         layers=model.layers
         
         # Grab all the parameters together.

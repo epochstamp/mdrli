@@ -1,4 +1,4 @@
-w_mse = 0.1
-w_kld = 0.9
-w_decays = 10000
+t_kld = 1.0
+t_decays = 2
 evaluate_on = action
+periodicity = 2

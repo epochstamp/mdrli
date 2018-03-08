@@ -43,8 +43,7 @@ class InterleavedTestEpochController(Controller):
         id = int(id)
         self._epoch_length = int(epoch_length)
         self._to_disable = list(map(int,controllers_to_disable.split(",")))
-        print(self._to_disable)
-        self._show_score = show_score == "True"
+        self._show_score = show_score
         self._epoch_count = 0
         self._id = int(id)
        
@@ -55,7 +54,6 @@ class InterleavedTestEpochController(Controller):
         self._number_tests = int(number_tests)
         self._path_files=path_files
         self._prefix_file = prefix_file
-        print(self._prefix_file)
 
         
     def onStart(self, agent):
@@ -92,7 +90,7 @@ class InterleavedTestEpochController(Controller):
             if self._show_score:
                 
                 
-                print(("Testing" if self._id == 1 else "Validating") + " score per episode (id: {}) is {} (average over {} episode(s))".format(self._id, mean_score, nbr_episodes))
+                print(("Testing" if self._id == 1 else "Validating") + " score per episode (id: {}) is {} (average over {} episode(s) with standard deviation of {})".format(self._id, mean_score, nbr_episodes,std_score))
             if self._summary_periodicity > 0 and self._summary_counter % self._summary_periodicity == 0:
                 try:
                     os.makedirs(self._path_files + "/" + "epoch_" + str(self._epoch_count))

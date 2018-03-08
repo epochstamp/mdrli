@@ -65,7 +65,6 @@ class Run(object):
            self.parser.error(message=e)
        
        self.params = args
-       print(self.params)
        for k,v in vars(self.params).items():
            attr = getattr(self.params,k)
            if isinstance(attr, str) and attr.lower() == "none":
@@ -88,7 +87,8 @@ class Run(object):
         env_params["rng"] = rng
         ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
         backend_nnet_params = parse_conf(conf_backend_nnet_dir)
-        env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params)
+        env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params,mode=1)
+
 
         backend_nnet_params["input_dimensions"] = env.inputDimensions()
         backend_nnet_params["n_actions"] = env.nActions()
@@ -141,7 +141,8 @@ class Run(object):
                     
                 else:
                     conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
-                controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl)
+                controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl,mode=0)
+                
                 agent.attach(controller)
         agent.run(self.params.epochs, self.params.max_size_episode)
         

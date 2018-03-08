@@ -272,10 +272,10 @@ class NeuralAgent(object):
         else:
             joblib.dump(all_params, basename, compress=True)
 
-    def storeNetwork(self):
+    def storeNetwork(self,**kwargs):
         """ Store a copy of the network in memory
         """
-        self._network_memory.append(self._network.getCopy())
+        self._network_memory.append((self._network.getCopy(),kwargs))
  
     def getNetworks(self):
         """ Store a copy of the network in memory
@@ -327,16 +327,15 @@ class NeuralAgent(object):
             if self._mode != -1:
                 self._totalModeNbrEpisode=0
                 self._mode_rewards = []
-                
                 while self._totalModeNbrEpisode < self._n_episodes:
                     mode_epoch_length = self._mode_epochs_length 
                     while mode_epoch_length > 0:
                         self._totalModeNbrEpisode += 1
                         mode_epoch_length = self._runEpisode(mode_epoch_length)
-                    
+                        
                     self._mode_rewards.append(self._total_mode_reward)
                     self._total_mode_reward = 0
-                self._mode_epochs_length = 0 
+
             else:
                 length = epoch_length
                 n_episodes = self._n_episodes
@@ -345,8 +344,8 @@ class NeuralAgent(object):
                         length = self._runEpisode(length)
                     n_episodes -= 1
                 i += 1
-            for c in self._controllers: c.onEpochEnd(self)
             
+            for c in self._controllers: c.onEpochEnd(self)
         self._environment.end()
         for c in self._controllers: c.onEnd(self)
 

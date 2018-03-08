@@ -7,6 +7,8 @@ Code for general deep Q-learning using Keras that can take as inputs scalars, ve
 import numpy as np
 from keras.optimizers import SGD,RMSprop
 from keras import backend as K
+import keras.losses
+from keras.losses import mean_squared_error
 from ctrl_neural_nets.ctrl_neural_net import QNetwork
 from deer.q_networks.NN_keras import NN # Default Neural network used
 from keras.models import load_model
@@ -14,14 +16,18 @@ from joblib import dump,load
 import os
 from copy import deepcopy
 
-def skillkeeper_loss(ws,y_targs,y_true,y_pred):
-        def loss(y_true,y_pred):
-            a = ws[0] * K.mean_squared_error(y_true,y_pred)
-            #Normalize weights
-            for i in range(1,len(ws)):
-                a += ws[i]*K.kullback_leibler_divergence(y_true,y_targs[i])
-            return a
-        return loss
+
+def skillkeeper_loss(ws,y_targs):
+    def loss(y_true,y_pred):
+        a = mean_squared_error(y_true,y_pred)
+        #Normalize weights
+        for i in range(1,len(ws)):
+            a += kullback_leibler_divergence(K.softmax(y_true*ws[i]),K.softmax(K.variable(y_targs[i])))
+        return a
+    keras.losses.loss = loss
+    return loss
+
+loss_functions = {"skillkeeper_loss":skillkeeper_loss}
 
 class Ctrl_deerfault(QNetwork):
     """
@@ -52,14 +58,12 @@ class Ctrl_deerfault(QNetwork):
         default is deer.qnetworks.NN_keras
     """
 
-    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_delta=0, freeze_interval=1000, batch_size=32, update_rule="rmsprop", random_state=np.random.RandomState(), double_Q=False, neural_network=NN):
+    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_delta=0, freeze_interval=1000, batch_size=32, update_rule="rmsprop", random_state=np.random.RandomState(), double_Q=False, neural_network=NN, loss='mse'):
         """ Initialize environment
         
         """
 
         QNetwork.__init__(self,environment, batch_size)
-        print(double_Q)
-        print("yo yo")
         
         self._rho = rho
         self._rms_epsilon = rms_epsilon
@@ -76,11 +80,12 @@ class Ctrl_deerfault(QNetwork):
         except:
                 Q_net = neural_network
         self.q_vals, self.params = Q_net._buildDQN()
-        
+        self._loss = loss
         self._compile()
 
         self.next_q_vals, self.next_params = Q_net._buildDQN()
-        self.next_q_vals.compile(optimizer='rmsprop', loss='mse') #The parameters do not matter since training is done on self.q_vals
+
+        self.next_q_vals.compile(optimizer='rmsprop', loss=self._loss) #The parameters do not matter since training is done on self.q_vals
 
         self._resetQHat()
 
@@ -111,7 +116,7 @@ class Ctrl_deerfault(QNetwork):
         return params_value
     """
     
-    def dumpTo(self,out):
+    def dumpTo(self,out=None):
         q_vals = self.q_vals
         next_q_vals = self.next_q_vals
         q_vals.save("temp.h5")
@@ -123,7 +128,8 @@ class Ctrl_deerfault(QNetwork):
         self.params = None
         self.next_params = None
         self.dumped = True
-        dump(self,out)
+        if out is not None:
+            dump(self,out)
         
     def load(self):
         if hasattr(self,"dumped") and self.dumped:
@@ -232,18 +238,20 @@ class Ctrl_deerfault(QNetwork):
 
         return np.argmax(q_vals),np.max(q_vals)
 
-    def getCopy():
+    def getCopy(self):
         """Return a copy of the current
         """
         self.dumpTo()
         copycat = deepcopy(self)
         copycat.load()
+        self.load()
         return copycat
         
         
-    def _compile(self,loss='mse',*args):
+    def _compile(self,loss=None,*args):
         """ compile self.q_vals
         """
+        global loss_functions
         if (self._update_rule=="sgd"):
             optimizer = SGD(lr=self._lr, momentum=self._momentum, nesterov=False)
         elif (self._update_rule=="rmsprop"):
@@ -251,6 +259,10 @@ class Ctrl_deerfault(QNetwork):
         else:
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
         
+        if loss is None:
+            loss = self._loss
+        elif loss in loss_functions.keys():
+            loss = loss_functions[loss]
         self.q_vals.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args))
 
     def _resetQHat(self):

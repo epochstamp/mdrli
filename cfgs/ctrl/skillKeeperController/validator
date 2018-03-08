@@ -1,4 +1,4 @@
+t_kld = float(0,1,default=1)
+t_decays = integer(min=1,default=2)
 evaluate_on = option(action,episode,epoch,default=action)
-w_mse = float(0,1,default=0.1)
-w_kld = float(0,1,default=0.9)
-w_decays = int(min=0,default=10000)
+periodicity = integer(min=2,default=5)

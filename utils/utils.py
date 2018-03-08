@@ -32,18 +32,15 @@ def list_classes_module_with_parent(modulefile,parent):
             cls.append(name)
         return cls
 
-def get_mod_object(folder,module,modtype,args,kwargs):
+def get_mod_object(folder,module,modtype,args,kwargs,mode=0):
     mod = __import__(folder + "." + module + "." + modtype, fromlist=[capitalizeFirstLetter(module)])
 
-     
-
-    try:
-        return getattr(mod, capitalizeFirsFtLetter(module))(*args,**kwargs)
-    except:
-        try:
-                return getattr(mod, capitalizeFirstLetter(module))(**kwargs)        
-        except:
-                return getattr(mod, capitalizeFirstLetter(module))(*args)
+    if mode == 0:
+        return getattr(mod, capitalizeFirstLetter(module))(*args,**kwargs)
+    elif mode == 1:
+        return getattr(mod, capitalizeFirstLetter(module))(**kwargs)  
+    else:
+        return getattr(mod, capitalizeFirstLetter(module))(*args)
 
 
 
