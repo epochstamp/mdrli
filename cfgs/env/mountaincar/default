@@ -1,0 +1,8 @@
+G=9.8
+M_CART=1.0
+M_POLE=0.1
+L=0.5
+F=10
+R=1
+S=5
+VIDEO_PREFIX=""

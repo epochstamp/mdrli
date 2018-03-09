@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-import data.tree
+#import data.tree
 
 class DataSet(object):
     """A replay memory consisting of circular buffers for observations, actions, rewards and terminals."""
