@@ -17,9 +17,6 @@ Author: Aaron Zixiao Qiu
 import numpy as np
 import copy
 import math
-import sys
-sys.path.append('../')
-sys.path.append('../..')
 from envs.env import Environment
 from gym import spaces
 
@@ -29,7 +26,7 @@ class Mountaincar(Environment):
         'video.frames_per_second': 30
     }
 
-    def __init__(self, rng,min_p=-1.2,max_p=0.6,max_s=0.07,goal=0.5,rand_min_p=-0.6,rand_max_p=-0.4,high_divisor=1,velocity_multiplier = 1):
+    def __init__(self, rng,min_p=-1.2,max_p=0.6,max_s=0.07,goal=0.5,rand_min_p=-0.6,rand_max_p=-0.4,rand_min_p_valid=-0.6,rand_max_p_valid=-0.4,rand_min_p_test=-0.6,rand_max_p_test=-0.4,high_divisor=1,velocity_multiplier = 1):
         self.rng = rng
         self.divisor = 2
         
@@ -37,9 +34,12 @@ class Mountaincar(Environment):
         self.max_position = float(max_p)
         self.max_speed = float(max_s)
         self.goal_position = float(goal)
-        self.rand_min_p = float(rand_min_p)
-        self.rand_max_p = float(rand_max_p)
 
+        self.rand_p = dict()
+        self.rand_p[-1] = (rand_min_p,rand_max_p)
+        self.rand_p[1] = (rand_min_p_valid,rand_max_p_valid)
+        self.rand_p[0] = (rand_min_p_test,rand_max_p_test)
+        
         self._input_dim  = [(1,),(1,)]
 
         self.low = np.array([self.min_position, -self.max_speed])
@@ -90,7 +90,8 @@ class Mountaincar(Environment):
         Mode : int
             - not used
         """
-        self.state = np.array([self.rng.uniform(low=self.rand_min_p, high=self.rand_max_p), 0])
+        low,high = self.rand_p[mode]
+        self.state = np.array([self.rng.uniform(low=low, high=high), 0])
         self.is_terminal=False
         return np.array(self.state)
                 
@@ -175,7 +176,7 @@ class Mountaincar(Environment):
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
         
-    def summarizePerformance(self, test_data_set,path_dump=None):
+    def summarizePerformance(self, test_data_set,path_dump=None, prefix_file=""):
         Environment.summarizePerformance(self,test_data_set,path_dump)
         states = test_data_set.states()
         actions = test_data_set.actions()

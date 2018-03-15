@@ -1,1 +1,1 @@
-python run.py --env-module mountaincar --env-conf-file power_engine --attach trainerController
+python run.py --env-module mountaincar --env-conf-file power_engine --attach trainerController evaluate_on=episode
