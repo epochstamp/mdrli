@@ -130,7 +130,7 @@ class Ctrl_deerfault(QNetwork):
         self.dumped = True
         if out is not None:
             dump(self,out)
-        
+
     def load(self):
         if hasattr(self,"dumped") and self.dumped:
             f = open("temp.h5","wb")

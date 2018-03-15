@@ -182,6 +182,7 @@ class Mountaincar(Environment):
         actions = test_data_set.actions()
         rewards = test_data_set.rewards()
         terminals = test_data_set.terminals()
+        print("Test")
         #XXX - You are supposed to plot somewhere some graphs relevant 
         #to this environment
         #It can be a video, or a human-friendly graph... Here you go !
