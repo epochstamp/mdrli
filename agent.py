@@ -330,12 +330,18 @@ class NeuralAgent(object):
                 self._mode_rewards = []
                 while self._totalModeNbrEpisode < self._n_episodes:
                     mode_epoch_length = self._mode_epochs_length 
-                    while mode_epoch_length > 0:
-                        self._totalModeNbrEpisode += 1
-                        mode_epoch_length = self._runEpisode(mode_epoch_length)
-                        
-                        self._mode_rewards.append(self._total_mode_reward)
-                        self._total_mode_reward = 0
+                    self._runEpisode(mode_epoch_length)
+                    self._mode_rewards.append(self._total_mode_reward)
+                    self._total_mode_reward = 0
+                    self._totalModeNbrEpisode += 1
+                    
+#                    mode_epoch_length = self._mode_epochs_length 
+#                    while mode_epoch_length > 0 and self._totalModeNbrEpisode < self._n_episodes:
+#                        self._totalModeNbrEpisode += 1
+#                        mode_epoch_length = self._runEpisode(mode_epoch_length)
+#                        
+#                        self._mode_rewards.append(self._total_mode_reward)
+#                        self._total_mode_reward = 0
 
             else:
                 length = epoch_length
