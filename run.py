@@ -6,7 +6,7 @@ from joblib import dump,load
 import json
 from random import randint
 import hashlib
-from utils.utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump, parse_conf, flatten, write_conf
+from utils.utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump, flatten, write_conf
 import argparse
 from data.dataset import DataSet
 from shutil import copyfile

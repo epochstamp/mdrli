@@ -16,6 +16,7 @@ from data.dataset import DataSet,SliceError
 from ctrls.controller import Controller
 from deer.helper import tree 
 from pols.epsilonGreedyPolicy.pol import EpsilonGreedyPolicy
+from pols.epsilonGreedyLowFreqPolicy.pol import EpsilonGreedyLowFreqPolicy
 
 class NeuralAgent(object):
     """The NeuralAgent class wraps a deep Q-network for training and testing in a given environment.
