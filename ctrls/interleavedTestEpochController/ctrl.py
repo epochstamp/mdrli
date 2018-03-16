@@ -2,6 +2,8 @@ import numpy as np
 import joblib
 import os
 from ctrls.controller import Controller
+import threading
+from multiprocessing import Process 
 
 class InterleavedTestEpochController(Controller):
     """A controller that interleaves a test epoch between training epochs of the agent.
@@ -87,6 +89,9 @@ class InterleavedTestEpochController(Controller):
             scores = []
             nb_episodes = 0
             mean_score,var_score,std_score,nbr_episodes=agent.statRewardsOverLastTests()
+            f = open(self._path_files + "/" + self._prefix_file + "_summary.csv", "a+")
+            f.write(str(self._epoch_count) + ";" + str(nbr_episodes) + ";" + str(mean_score)+";"+str(var_score)+";"+str(std_score)+"\n")
+            f.close()
             if self._show_score:
                 
                 
@@ -96,12 +101,10 @@ class InterleavedTestEpochController(Controller):
                     os.makedirs(self._path_files + "/" + "epoch_" + str(self._epoch_count))
                 except:
                     pass
+                Process(None, agent.summarizeTestPerformance, kwargs={"path_dump" : self._path_files + "/" + "epoch_" + str(self._epoch_count),"prefix_file" : self._prefix_file}).start()
+                #agent.summarizeTestPerformance(path_dump=self._path_files + "/" + "epoch_" + str(self._epoch_count),prefix_file=self._prefix_file)
 
-                agent.summarizeTestPerformance(path_dump=self._path_files + "/" + "epoch_" + str(self._epoch_count),prefix_file=self._prefix_file)
-
-            f = open(self._path_files + "/" + self._prefix_file + "_summary.csv", "a+")
-            f.write(str(self._epoch_count) + ";" + str(nbr_episodes) + ";" + str(mean_score)+";"+str(var_score)+";"+str(std_score)+"\n")
-            f.close()
+            
             agent.resumeTrainingMode()
             agent.setControllersActive(self._to_disable, True)
 

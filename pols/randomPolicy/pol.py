@@ -18,7 +18,7 @@ class RandomPolicy(Policy):
             # Continuous set of actions
             action=[]
             for a in self.n_actions:
-                action.append( self.random_state.uniform(a[0],a[1]) )
+                action.append(self.random_state.uniform(a[0],a[1]))
             action=np.array(action)
 
         V = 0

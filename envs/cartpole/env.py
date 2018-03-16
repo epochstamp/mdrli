@@ -34,6 +34,7 @@ class Cartpole(Environment):
         Arguments:
             rng - the numpy random number generator            
         """
+        
         # Defining the type of environment
         self._rng = rng
         # Observations = (x, x_dot, theta, theta_dot, timestamp)
@@ -47,6 +48,7 @@ class Cartpole(Environment):
         self.f = float(f)
         self.r = float(r)
         self.s = float(s)
+        
             
            
             

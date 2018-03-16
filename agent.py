@@ -84,9 +84,9 @@ class NeuralAgent(object):
             self._states[i] = []
             inputDims = self._environments[i].inputDimensions()
         
-            if replay_start_size is None:
-                replay_start_size = max(inputDims[i][0] for i in range(len(inputDims)))
-            elif replay_start_size < max(inputDims[i][0] for i in range(len(inputDims))) :
+            if self._replay_start_size is None:
+                self._replay_start_size = max(inputDims[i][0] for i in range(len(inputDims)))
+            elif self._replay_start_size < max(inputDims[i][0] for i in range(len(inputDims))) :
                 raise AgentError("Replay_start_size should be greater than the biggest history of a state.")
             for j in range(len(inputDims)):
                 self._states[i].append(np.zeros(inputDims[j], dtype=config.floatX))
@@ -241,7 +241,7 @@ class NeuralAgent(object):
             self._training_loss_averages.append(loss)
             if (self._exp_priority):
                 self._dataset.updatePriorities(pow(loss_ind,self._exp_priority)+0.0001, rndValidIndices[1])
-
+            self._selected_batch = None
         except SliceError as e:
             warn("Training not done - " + str(e), AgentWarning)
 

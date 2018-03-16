@@ -79,6 +79,7 @@ class Run(object):
         else:
                 seed = int(self.params.rng)
         rng = np.random.RandomState(seed)
+        np.random.seed(seed)
     
         conf_env_dir = "cfgs/env/" + self.params.env_module + "/" + self.params.env_conf_file
         conf_ctrl_neural_nets_dir = "cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
@@ -93,12 +94,15 @@ class Run(object):
         backend_nnet_params["input_dimensions"] = env.inputDimensions()
         backend_nnet_params["n_actions"] = env.nActions()
         backend_nnet_params["random_state"] = rng
-        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", tuple(), backend_nnet_params)
+        backend_nnet_params["batch_size"] = self.params.batch_size
+        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", tuple(), backend_nnet_params,mode=1)
+        print(rng)
         ctrl_neural_nets_params["random_state"] = rng
         ctrl_neural_nets_params["neural_network"] = neural_net
+        ctrl_neural_nets_params["batch_size"] = self.params.batch_size
         ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,), ctrl_neural_nets_params)
                                 
-        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=max(env.inputDimensions()[i][0] for i in range(len(env.inputDimensions()))), batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, only_full_history=self.params.only_full_history)
+        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, only_full_history=self.params.only_full_history)
        
 
 
@@ -145,15 +149,6 @@ class Run(object):
                 
                 agent.attach(controller)
         agent.run(self.params.epochs, self.params.max_size_episode)
-        
-        hashed = hashlib.sha1(str(env_params).encode("utf-8") + str(seed).encode("utf-8") + str(vars(self.params)).encode("utf-8")).hexdigest()
-        todump = self.params.out_prefix + str(hashed)
-        out = todump
-        try:
-                os.makedirs("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/")
-        except:
-                pass
-        ctrl_neural_net.dumpTo("dumps/ctrl_neural_nets/"+self.params.qnetw_module+"/"+out+".dump")
                 
                 
            

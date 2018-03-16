@@ -20,7 +20,7 @@ class SkillKeeperController(Controller):
         Weight decay for w_kld
     """
 
-    def __init__(self, evaluate_on="action", t_kld = 1., t_decays = 2., periodicity = 2):
+    def __init__(self, evaluate_on="action", t_kld = 100., t_decays = 2., periodicity = 2):
         super(self.__class__, self).__init__()
         self._t_kld = float(t_kld)
         self._t_decay = t_decays
@@ -60,21 +60,24 @@ class SkillKeeperController(Controller):
             
             self._networks.append(network)
             
-
-            for i in range(len(self._ts[0:-1])):
-                    self._ts[i] /= self._t_decay
-            self._ts.append(self._t_kld)
+            print("New neural network found")
+            for i in range(len(self._ts)):
+                    self._ts[i] /= float(self._t_decay)
+            self._ts.append(float(self._t_kld))
             #Get data batch and store it in agent
             states,_,_,_,_,_ = agent.generateAndStoreBatch()
             q_targs = []
             t_klds = []
             for i in range(len(self._networks)):
-                    network = networks[i][0]
+                    network = self._networks[i]
                     t_kld = float(self._ts[i])
                     if t_kld > 0.00001:
                         q_targs.append(network.batchPredict(states))
-                    t_klds.append(t_kld)
-            agent._network._compile("skillkeeper_loss",t_klds,q_targs)
+                        t_klds.append(t_kld)
+                    else:
+                        self._ts.remove(i)
+                        
+            agent._network._compile("skillkeeper_loss",agent.discountFactor(),t_klds,q_targs)
 
 
     def onStart(self,agent):

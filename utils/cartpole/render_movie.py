@@ -9,6 +9,7 @@ import os
 import numpy as np
 from math import sin, cos, pi
 
+from multiprocessing import Process
 import matplotlib.pyplot as plt
 
 PI = np.pi
@@ -80,7 +81,7 @@ def save_mp4(data, n, video_prefix=""):
             frame_number += 1
 
     
-    print(os.system("ffmpeg -framerate 25 -i "+video_prefix+"_imgs/_tmp%03d.png  -c:v libx264 -pix_fmt yuv420p "+video_prefix+"_video/_out" + str(n) + ".mp4"))
+    print(os.system("ffmpeg -framerate 25 -i "+video_prefix+"_imgs/_tmp%03d.png  -c:v libx264 -pix_fmt yuv420p "+video_prefix+"_video/_out" + str(n) + ".mp4 > /dev/null 2> /dev/null"))
 
     return
 

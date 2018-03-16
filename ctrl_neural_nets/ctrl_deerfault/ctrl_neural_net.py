@@ -8,7 +8,7 @@ import numpy as np
 from keras.optimizers import SGD,RMSprop
 from keras import backend as K
 import keras.losses
-from keras.losses import mean_squared_error
+from keras.losses import mean_squared_error, kullback_leibler_divergence
 from ctrl_neural_nets.ctrl_neural_net import QNetwork
 from deer.q_networks.NN_keras import NN # Default Neural network used
 from keras.models import load_model
@@ -21,7 +21,7 @@ def skillkeeper_loss(ws,y_targs):
     def loss(y_true,y_pred):
         a = mean_squared_error(y_true,y_pred)
         #Normalize weights
-        for i in range(1,len(ws)):
+        for i in range(len(ws)):
             a += kullback_leibler_divergence(K.softmax(y_true*ws[i]),K.softmax(K.variable(y_targs[i])))
         return a
     keras.losses.loss = loss
@@ -64,7 +64,6 @@ class Ctrl_deerfault(QNetwork):
         """
 
         QNetwork.__init__(self,environment, batch_size)
-        
         self._rho = rho
         self._rms_epsilon = rms_epsilon
         self._momentum = momentum
@@ -74,6 +73,7 @@ class Ctrl_deerfault(QNetwork):
         self._double_Q = double_Q
         self._random_state = random_state
         self.update_counter = 0
+        
                 
         try:        
                 Q_net = neural_network(self._batch_size, self._input_dimensions, self._n_actions, self._random_state)
