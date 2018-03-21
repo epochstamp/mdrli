@@ -2,8 +2,9 @@ import numpy as np
 import joblib
 import os
 from ctrls.controller import Controller
-
-class LearningRateController(Controller):
+from joblib import dump,load
+from utils.fusion import fusion
+class NetFusionController(Controller):
     """A controller that loads 2 networks at startup and fusion them and save the result
     
     Parameters
@@ -26,8 +27,11 @@ class LearningRateController(Controller):
         if (self._active == False):
             return
 
-        self._epoch_count = 0
-        #net1 = agent._network.load(self._input_file1)
-        #net2 = agent._network.load(self._input_file2)
-        #self._fusion_net = fusion(net1,net2)
-        #save_net
+        net1class = load(self._input_file1)
+        net1class.load();
+        
+        net2class = load(self._input_file2)
+        net2class.load();
+        
+        fusion_net = fusion(net1class,net2class)
+        agent._network = fusion_net

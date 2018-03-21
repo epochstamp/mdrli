@@ -19,7 +19,12 @@ import copy
 import math
 from envs.env import Environment
 from gym import spaces
+import matplotlib.pyplot as plt
 
+import sys
+sys.path.insert(0, 'utils/mountaincar')
+sys.path.insert(0, 'utils')
+from render_movie import save_mp4
 class Mountaincar(Environment):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -177,12 +182,21 @@ class Mountaincar(Environment):
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
         
     def summarizePerformance(self, test_data_set,path_dump=None, prefix_file=""):
-        Environment.summarizePerformance(self,test_data_set,path_dump)
-        states = test_data_set.states()
-        actions = test_data_set.actions()
-        rewards = test_data_set.rewards()
-        terminals = test_data_set.terminals()
-        print("Test")
+#        Environment.summarizePerformance(self,test_data_set,path_dump)
+#        observations = test_data_set.observations()
+#        rewards = test_data_set.rewards()
+#        plt.plot(rewards)
+        
+        Environment.summarizePerformance(self,test_data_set, path_dump, prefix_file)
+                # Save the data in the correct input format for video generation
+        observations = test_data_set.observations()
+        data = np.zeros((len(observations[0]), len(observations)+1))
+        for i in range(1, 3):
+            data[:,i] = observations[i - 1]
+        data[:,0]=np.arange(len(observations[0]))*0.02
+        save_mp4(self,data, 0, self.path_dump + "/" + prefix_file)
+        return
+        
         #XXX - You are supposed to plot somewhere some graphs relevant 
         #to this environment
         #It can be a video, or a human-friendly graph... Here you go !

@@ -1,0 +1,7 @@
+g=float(default=9.8)
+m_cart=float(default=1.0)
+m_pole=float(default=0.1)
+l=float(default=0.5)
+f=float(default=10)
+r=float(default=0)
+s=float(default=5)

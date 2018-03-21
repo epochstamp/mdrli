@@ -77,7 +77,6 @@ class InterleavedTestEpochController(Controller):
             return
 
 
-
         mod = self._epoch_count % self._periodicity
         self._epoch_count += 1
         if mod == 0:

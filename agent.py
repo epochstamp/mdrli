@@ -92,7 +92,7 @@ class NeuralAgent(object):
             for j in range(len(inputDims)):
                 self._states[i].append(np.zeros(inputDims[j], dtype=config.floatX))
             if (train_policy==None):
-                self._train_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.1)
+                self._train_policy = EpsilonGreedyLowFreqPolicy(self._environments[i].nActions(), random_state, 0.1)
                 self._train_policy.setAttribute("model",q_networks[i])
             else:
                 #Todo : change the number of actions. Listify the policies
@@ -322,7 +322,7 @@ class NeuralAgent(object):
         self._n_episodes_init = n_episodes
         for c in self._controllers: c.onStart(self)
         i = 0
-        while i < n_epochs or self._mode_epochs_length > 0:
+        while i < n_epochs:
             self._training_loss_averages = []
             
             if self._mode != -1:

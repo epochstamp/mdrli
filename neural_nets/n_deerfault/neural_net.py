@@ -5,7 +5,7 @@ Neural network using Keras (called by q_net_keras)
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, Reshape, Permute, concatenate
+from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, LeakyReLU, Reshape, Permute, concatenate
 
 lays = dict()
 lays["dense"] = Dense
@@ -104,8 +104,16 @@ class N_deerfault():
         #for l in self._layers : 
             #print(l)
             #x = lays[l["type"]](l["units"],activation=l["activation"])(x)
-        x = Dense(50, activation='elu')(x)
-        x = Dense(20, activation='elu')(x)
+#        x = Dense(50, activation='elu')(x)
+#        x = Dense(20, activation='elu')(x)
+        x = Dense(20)(x)
+        x = LeakyReLU(alpha=0.3)(x)
+        x = Dense(20)(x)
+        x = LeakyReLU(alpha=0.3)(x)
+        x = Dense(20)(x)
+        x = LeakyReLU(alpha=0.3)(x)
+        x = Dense(20)(x)
+        x = LeakyReLU(alpha=0.3)(x)
        
         if (self._action_as_input==False):
             if ( isinstance(self._n_actions,int)):

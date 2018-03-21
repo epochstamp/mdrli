@@ -1,9 +1,8 @@
 import numpy as np
-import joblib
 import os
 from ctrls.controller import Controller
-
-class netSaveLoadController(Controller):
+from joblib import dump,load
+class NetSaveLoadController(Controller):
     """A controller that load a network at startup and save it at the end
     
     Parameters
@@ -24,11 +23,16 @@ class netSaveLoadController(Controller):
             return
 
         self._epoch_count = 0
-        #agent._network.load(self._input_file)
+        if(self._input_file!="in"):
+            netclass = load(self._input_file)
+            netclass.load()
+            agent._network = netclass
+        print(agent._network.q_vals.summary())
         
     def onEnd(self, agent):
         if (self._active == False):
             return
-        #agent._network.save(self._output_file)
-    
-        pass
+        if(self._output_file!="out"):
+            agent._network.dumpTo(self._output_file)
+            agent._network.load()
+        print(agent._network.q_vals.summary())

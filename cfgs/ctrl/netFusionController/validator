@@ -1,3 +1,3 @@
-input_file1=string(default=in1)
-input_file2=string(default=in2)
+input_file1=string(default=out_file)
+input_file2=string(default=out_file2)
 output_file=string(default=out)
