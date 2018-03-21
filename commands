@@ -2,4 +2,21 @@ python run.py --env-module mountaincar --env-conf-file power_engine --attach tra
 
 
 
---env-module mountaincar --env-conf-file power_engine --attach verboseController --attach epsilonController evaluate_on=episode --attach trainerController evaluate_on=action --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp/ --max-size-episode 200 --epochs 1000
+--env-module mountaincar --env-conf-file power_engine --attach verboseController --attach epsilonController evaluate_on=epoch e_decays=1000 --attach trainerController evaluate_on=epoch --attach netSaveLoadController output_file=power_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp/ --max-size-episode 200 --epochs 1000
+
+--env-module mountaincar --env-conf-file power_engine --attach verboseController --attach epsilonController evaluate_on=epoch --attach trainerController evaluate_on=epoch --attach netSaveLoadController output_file=power_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp/ --max-size-episode 200 --epochs 1000
+
+
+--env-module mountaincar --env-conf-file power_engine --attach verboseController --attach epsilonController evaluate_on=epoch --attach trainerController evaluate_on=epoch --attach netFusionController --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp/ --max-size-episode 200 --epochs 10
+
+
+
+--env-module mountaincar --env-conf-file power_engine --attach verboseController --attach epsilonController evaluate_on=epoch e_decays=8000 --attach trainerController evaluate_on=epoch --attach netSaveLoadController output_file=power_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp_power/ summarize_every=1000 --max-size-episode 200 --epochs 10001
+
+
+--env-module mountaincar --attach verboseController --attach epsilonController evaluate_on=epoch e_decays=500 --attach trainerController evaluate_on=epoch --attach netSaveLoadController output_file=default_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp_default/ summarize_every=500 --max-size-episode 200 --epochs 1001
+
+--env-module mountaincar --env-conf-file small_mountain --attach verboseController --attach epsilonController evaluate_on=epoch e_decays=500 --attach trainerController evaluate_on=epoch --attach netSaveLoadController output_file=low_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp_low/ summarize_every=500 --max-size-episode 200 --epochs 1001
+
+
+--env-module mountaincar --attach verboseController --attach epsilonController evaluate_on=epoch e_decays=1000 --attach trainerController evaluate_on=epoch --attach netFusionController input_file1=power_net input_file2=low_net --attach interleavedTestEpochController epoch_length=200 controllers_to_disable=0,1,2 show_score=True path_files=temp_fusion/ summarize_every=500 --max-size-episode 200 --epochs 1001

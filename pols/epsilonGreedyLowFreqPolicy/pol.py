@@ -4,7 +4,7 @@ from pols.greedyPolicy.pol import GreedyPolicy
 import numpy as np
 class EpsilonGreedyLowFreqPolicy(Policy):
 
-    def __init__(self, n_actions,random_state,epsilon=0.1,rep_action_max_num=50):
+    def __init__(self, n_actions,random_state,epsilon=0.1,rep_action_max_num=10):
         Policy.__init__(self,n_actions,random_state)
         self._epsilon = epsilon
         self._randomPolicy = RandomPolicy(n_actions,random_state)

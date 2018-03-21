@@ -84,8 +84,8 @@ class Ctrl_deerfault(QNetwork):
 
         self.next_q_vals, self.next_params = Q_net._buildDQN()
 
-        self.next_q_vals.compile(optimizer='rmsprop', loss=self._loss) #The parameters do not matter since training is done on self.q_vals
-
+        #self.next_q_vals.compile(optimizer='rmsprop', loss=self._loss) #The parameters do not matter since training is done on self.q_vals
+        self.next_q_vals.compile(optimizer='sgd', loss='mse')
         self._resetQHat()
 
     def getAllParams(self):
