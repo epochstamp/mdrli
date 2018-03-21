@@ -20,7 +20,6 @@ from copy import deepcopy
 def skillkeeper_loss(ws,y_targs):
     def loss(y_true,y_pred):
         a = mean_squared_error(y_true,y_pred)
-        #Normalize weights
         for i in range(len(ws)):
             a += kullback_leibler_divergence(K.softmax(y_true*ws[i]),K.softmax(K.variable(y_targs[i])))
         return a
@@ -98,23 +97,7 @@ class Ctrl_deerfault(QNetwork):
     def setAllParams(self, list_of_values):
         for i,p in enumerate(self.params):
             K.set_value(p,list_of_values[i])
-    """       
-    def dumpBackEnd(self, out_model, out_params):
-        self.q_vals.save(out_model)
-        dump(self.getAllParams(), out_params)
-        
-    def loadBackEndModel(self, in_model,inplace==True):
-        if not inplace:
-                return load_model(in_model)
-        else:
-                self.q_vals = load_model(in_model)
-    def loadBackEndParams(self, in_params):
-        p = load(in_model)
-        params_value=[]
-        for i,p in enumerate(p):
-            params_value.append(K.get_value(p))
-        return params_value
-    """
+
     
     def dumpTo(self,out=None):
         q_vals = self.q_vals

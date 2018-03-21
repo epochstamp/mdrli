@@ -50,7 +50,7 @@ class NeuralAgent(object):
         observations before the beginning of the episode
     """
 
-    def __init__(self, environments, q_networks, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, test_policy=None, only_full_history=True,init_env=0):
+    def __init__(self, environments, q_networks, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, train_policy_kwargs=None, test_policy=None, only_full_history=True,init_env=0):
         
         
         self._controllers = []
@@ -79,6 +79,7 @@ class NeuralAgent(object):
         self._in_episode = False
         self._selected_action = -1
         self._selected_batch = None
+        self._train_policies = [None] * len(environments)
 
         self._states = [None] * len(self._environments)
         for i in range(len(self._environments)):
@@ -91,18 +92,21 @@ class NeuralAgent(object):
                 raise AgentError("Replay_start_size should be greater than the biggest history of a state.")
             for j in range(len(inputDims)):
                 self._states[i].append(np.zeros(inputDims[j], dtype=config.floatX))
-            if (train_policy==None):
-                self._train_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.1)
-                self._train_policy.setAttribute("model",q_networks[i])
+
+            if (train_policy is None):
+                self._train_policies[i] = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.1)
+                
             else:
                 #Todo : change the number of actions. Listify the policies
-                self._train_policy = train_policy
-            if (test_policy==None):
-                self._test_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.)
-                self._test_policy.setAttribute("model",q_networks[i])
-            else:
-                #Todo : change the number of actions
-                self._test_policy = test_policy
+                self._train_policies[i] = train_policy(self._environments[i].nActions(), random_state,**train_policy_kwargs)
+            self._train_policies[i].setAttribute("model",q_networks[i])
+        
+        if (test_policy is None):
+            self._test_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.)
+            self._test_policy.setAttribute("model",q_networks[i])
+        else:
+            self._test_policy = test_policy
+        self._train_policy = self._train_policies[self._e]
         self._state = self._states[self._e]
 
     def setEnvironment(self,e,reset=False):
@@ -117,6 +121,8 @@ class NeuralAgent(object):
             if self._tmp_dataset is not None:
                 self._tmp_dataset.flush()
         self._environment = self._environments[self._e]
+        self._train_policy = self._train_policies[self._e]
+        self._network = self._networks[self._e]
 
     def setControllersActive(self, toDisable, active):
         """ Activate controller

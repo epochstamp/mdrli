@@ -6,7 +6,7 @@ from joblib import dump,load
 import json
 from random import randint
 import hashlib
-from utils.utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump, flatten, write_conf
+from utils.utils import get_mod_object, md5_file,parse_conf, load_dump, get_mod_class, dump_dump, flatten, write_conf, erase_dict_from_keyword_list, revalidate_dict_from_conf_module
 import argparse
 from data.dataset import DataSet
 from shutil import copyfile
@@ -90,19 +90,24 @@ class Run(object):
         backend_nnet_params = parse_conf(conf_backend_nnet_dir)
         env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params,mode=1)
 
+        pol_train = get_mod_class("pols",self.params.pol_train_module, "pol")
+        self.params.pol_train_args = flatten(self.params.pol_train_args)
+        pol_train_args = parse_conf("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) if isfile("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) else parse_conf("cfgs/pol/" + self.params.pol_train_module + "/default")
+        pol_train_args_2 = erase_dict_from_keyword_list(pol_train_args, self.params.pol_train_args)
+        pol_train_args = revalidate_dict_from_conf_module(pol_train_args_2, "pol", self.params.pol_train_module)
 
         backend_nnet_params["input_dimensions"] = env.inputDimensions()
         backend_nnet_params["n_actions"] = env.nActions()
         backend_nnet_params["random_state"] = rng
         backend_nnet_params["batch_size"] = self.params.batch_size
         neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", tuple(), backend_nnet_params,mode=1)
-        print(rng)
         ctrl_neural_nets_params["random_state"] = rng
         ctrl_neural_nets_params["neural_network"] = neural_net
         ctrl_neural_nets_params["batch_size"] = self.params.batch_size
         ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,), ctrl_neural_nets_params)
-                                
-        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, only_full_history=self.params.only_full_history)
+                      
+         
+        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, train_policy=pol_train,train_policy_kwargs=pol_train_args, only_full_history=self.params.only_full_history)
        
 
 
@@ -130,7 +135,7 @@ class Run(object):
                         for a in remainder:
                              sc = a.split("=")
                              if len(sc) != 2:
-                                 print ("Warning : arg " + a + " for controller parametrization is ill_formed. It needs to be in the form key=value.") 
+                                 print ("Warning : arg " + a + " for controller parametrization is ill formed. It needs to be in the form key=value.") 
                              else:
                                  redo_conf = True
                                  if sc[0] in conf_ctrl.keys():

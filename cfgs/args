@@ -66,3 +66,12 @@
     dest=controllers
     nargs=+
     action=append
+[pol-train-module]
+    help=Class module of the training policy
+    default=epsilonGreedyPolicy
+    dest=pol_train_module
+[pol-train-args]
+    help=Class module of the training policy
+    dest=pol_train_args
+    nargs=*
+    action=append

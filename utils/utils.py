@@ -19,6 +19,20 @@ def md5_file(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+def erase_dict_from_keyword_list(dict_to_erase, strkeyvalue_list, warning=False):
+    dict_res = dict(dict_to_erase)
+    lst = list(filter(lambda x : len(x) == 2, map(lambda y : y.split("="), strkeyvalue_list)))
+    for [k,v] in lst:
+        if k not in dict_to_erase and warning:
+            print("Warning : keyword " + str(k) + " is not a key from the dict to erase") 
+        dict_res[k] = v
+    return dict_res
+
+def revalidate_dict_from_conf_module(dict_args, modtype,module):
+    write_conf(dict_args, "cfgs/"+modtype+"/" + module + "/temp")
+    dict_res = parse_conf("cfgs/"+modtype+"/" + module + "/temp")
+    os.remove("cfgs/"+modtype+"/" + module + "/temp")   
+    return dict_res       
 
 def list_classes_module_with_parent(modulefile,parent):
         cls = []
