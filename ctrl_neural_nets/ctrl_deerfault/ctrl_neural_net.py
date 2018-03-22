@@ -78,6 +78,8 @@ class Ctrl_deerfault(QNetwork):
                 Q_net = neural_network(self._batch_size, self._input_dimensions, self._n_actions, self._random_state)
         except:
                 Q_net = neural_network
+        
+
         self.q_vals, self.params = Q_net._buildDQN()
         self._loss = loss
         self._compile()

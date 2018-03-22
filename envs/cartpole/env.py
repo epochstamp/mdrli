@@ -28,7 +28,7 @@ N_TAU=10
 DELTA_T=0.02
 
 class Cartpole(Environment):
-    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,f=10,r=0,s=5):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,min_f=-10,max_f=10,r=0,s=5,stepsize=20):
         """ Initialize environment.
 
         Arguments:
@@ -45,10 +45,14 @@ class Cartpole(Environment):
         self.m_cart = float(m_cart)
         self.m_pole = float(m_pole)
         self.l = float(l)
-        self.f = float(f)
         self.r = float(r)
         self.s = float(s)
-        
+        self.min_f = min_f
+        self.max_f = max_f
+        self._continuous = stepsize <= 0
+        self._n_actions = [[self.min_f,self.max_f]] if self._continuous else int((self.max_f - self.min_f)/stepsize)
+        self.stepsize = stepsize
+        self.actions = None
             
            
             
@@ -65,9 +69,13 @@ class Cartpole(Environment):
             reward - reward for this transition
         """
         # Direction of the force
-        force = self.f
-        if (action == 0):
-            force = -self.f
+        if self._continuous:
+            force = action[0]
+        else:
+            if self.actions is None:    
+                
+                self.actions = np.arange(self.min_f, self.max_f + self.stepsize, self.stepsize)
+            force = self.actions[action]
 
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
@@ -190,7 +198,7 @@ class Cartpole(Environment):
     def nActions(self):
         # The environment allows two different actions to be taken
         # at each time step
-        return 2             
+        return self._n_actions  
 
     def observe(self):
         return self.convert_repr() 

@@ -91,8 +91,8 @@ class Run(object):
         env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params,mode=1)
 
         pol_train = get_mod_class("pols",self.params.pol_train_module, "pol")
-        self.params.pol_train_args = flatten(self.params.pol_train_args)
-        pol_train_args = parse_conf("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) if isfile("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) else parse_conf("cfgs/pol/" + self.params.pol_train_module + "/default")
+        self.params.pol_train_args = flatten(self.params.pol_train_args) if self.params.pol_train_args is not None else [] 
+        pol_train_args = parse_conf("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) if len(self.params.pol_train_args) > 0 and isfile("cfgs/pol/" + self.params.pol_train_module + "/" + self.params.pol_train_args[0]) else parse_conf("cfgs/pol/" + self.params.pol_train_module + "/default")
         pol_train_args_2 = erase_dict_from_keyword_list(pol_train_args, self.params.pol_train_args)
         pol_train_args = revalidate_dict_from_conf_module(pol_train_args_2, "pol", self.params.pol_train_module)
 

@@ -6,6 +6,7 @@ Author: Aaron Zixiao Qiu
 """
 
 import os
+import shutil
 import numpy as np
 from math import sin, cos, pi
 
@@ -82,7 +83,8 @@ def save_mp4(data, n, video_prefix=""):
 
     
     print(os.system("ffmpeg -framerate 25 -i "+video_prefix+"_imgs/_tmp%03d.png  -c:v libx264 -pix_fmt yuv420p "+video_prefix+"_video/_out" + str(n) + ".mp4 > /dev/null 2> /dev/null"))
-
+	
+    shutil.rmtree(video_prefix+"_imgs/")
     return
 
 def _draw_point(point, time_bar, t, x_min, x_max, cart_plot):

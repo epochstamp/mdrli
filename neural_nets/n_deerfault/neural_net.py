@@ -5,10 +5,18 @@ Neural network using Keras (called by q_net_keras)
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, LeakyReLU, Reshape, Permute, concatenate
-
+from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, LeakyReLU, Reshape, Permute, concatenate, PReLU, ELU, ThresholdedReLU, Softmax
 lays = dict()
 lays["dense"] = Dense
+
+activations = dict()
+activations["leakyrelu"] = LeakyReLU
+activations["prelu"] = PReLU
+activations["elu"] = ELU
+activations["thresholdedrelu"] = ThresholdedReLU
+activations["softmax"] = Softmax
+
+
 
 class N_deerfault():
     """
@@ -24,7 +32,7 @@ class N_deerfault():
     action_as_input : Boolean
         Whether the action is given as input or as output
     """
-    def __init__(self, batch_size=32, input_dimensions=[], n_actions=2, random_state=np.random.RandomState(), action_as_input=False, layers = [{"type" : "dense", "activation" : "LeakyReLU", "units" : 64}]): 
+    def __init__(self, batch_size=32, input_dimensions=[], n_actions=2, random_state=np.random.RandomState(), action_as_input=False, layers = [{"type" : "dense", "activation" : "leakyrelu", "activation_kwargs" : {}, "units" : 50},{"type" : "dense", "activation" : "elu", "activation_kwargs" : {}, "units" : 20}]): 
         self._input_dimensions=input_dimensions
         self._batch_size=batch_size
         self._random_state=random_state
@@ -36,6 +44,7 @@ class N_deerfault():
         """
         Build a network consistent with each type of inputs
         """
+        global lays, activations
         layers=[]
         outs_conv=[]
         inputs=[]
@@ -101,19 +110,28 @@ class N_deerfault():
             x= outs_conv [0]
         
         # we stack a deep fully-connected network on top
-        #for l in self._layers : 
-            #print(l)
-            #x = lays[l["type"]](l["units"],activation=l["activation"])(x)
-#        x = Dense(50, activation='elu')(x)
-#        x = Dense(20, activation='elu')(x)
-        x = Dense(20)(x)
-        x = LeakyReLU(alpha=0.3)(x)
-        x = Dense(20)(x)
-        x = LeakyReLU(alpha=0.3)(x)
-        x = Dense(20)(x)
-        x = LeakyReLU(alpha=0.3)(x)
-        x = Dense(20)(x)
-        x = LeakyReLU(alpha=0.3)(x)
+
+        for l in self._layers : 
+            x = lays[l["type"]](l["units"])(x)
+            try : 
+                x = Activation(l["activation"],**l["activation_kwargs"])(x)
+            except:
+                try:
+                    x = activations[l["activation"]](**l["activation_kwargs"])(x)
+                except:
+                    print("Warning : the activation layer you have requested is not available. Activation relu will be used")
+                    x = Activation("relu")(x)
+
+        #x = Dense(50, activation='elu')(x)
+        #x = Dense(20, activation='elu')(x)
+        #x = Dense(20)(x)
+        #x = LeakyReLU(alpha=0.3)(x)
+        #x = Dense(20)(x)
+        #x = LeakyReLU(alpha=0.3)(x)
+        #x = Dense(20)(x)
+        #x = LeakyReLU(alpha=0.3)(x)
+        #x = Dense(20)(x)
+        #x = LeakyReLU(alpha=0.3)(x)
        
         if (self._action_as_input==False):
             if ( isinstance(self._n_actions,int)):
