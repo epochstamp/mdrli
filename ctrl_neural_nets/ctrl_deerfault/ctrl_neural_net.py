@@ -41,8 +41,10 @@ class Ctrl_deerfault(QNetwork):
         Parameter for rmsprop. Default : 0.0001
     momentum : float
         Default : 0
-    clip_delta : float
-        Not implemented.
+    clip_norm : float
+        if clip_norm > 0, all parameters gradient will be clipped to a maximum norm of clip_norm
+    clip_value : float
+        if clip_norm > 0, all parameters gradient will be clipped to a maximum value of clip_value
     freeze_interval : int
         Period during which the target network is freezed and after which the target network is updated. Default : 1000
     batch_size : int
@@ -53,11 +55,11 @@ class Ctrl_deerfault(QNetwork):
     double_Q : bool, optional
         Activate or not the double_Q learning.
         More informations in : Hado van Hasselt et al. (2015) - Deep Reinforcement Learning with Double Q-learning.
-    neural_network : object, optional
+    neural_network : class, optional
         default is deer.qnetworks.NN_keras
     """
 
-    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_delta=0, freeze_interval=1000, batch_size=32, update_rule="rmsprop", random_state=np.random.RandomState(), double_Q=False, neural_network=NN, loss='mse'):
+    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_value=0,clip_norm=0, freeze_interval=1000, batch_size=32, update_rule="rmsprop", random_state=np.random.RandomState(), double_Q=False, neural_network=NN, neural_network_kwargs={}, loss='mse'):
         """ Initialize environment
         
         """
@@ -67,17 +69,19 @@ class Ctrl_deerfault(QNetwork):
         self._rms_epsilon = rms_epsilon
         self._momentum = momentum
         self._update_rule = update_rule
-        #self.clip_delta = clip_delta
+        self._clip_value = clip_value
+        self._clip_norm = clip_norm
         self._freeze_interval = freeze_interval
         self._double_Q = double_Q
         self._random_state = random_state
         self.update_counter = 0
-        
+        if "input_dimensions" not in neural_network_kwargs:
+            neural_network_kwargs["input_dimensions"] = self._input_dimensions
+        if "n_actions" not in neural_network_kwargs:
+            neural_network_kwargs["n_actions"] = self._n_actions
                 
-        try:        
-                Q_net = neural_network(self._batch_size, self._input_dimensions, self._n_actions, self._random_state)
-        except:
-                Q_net = neural_network
+        Q_net = neural_network(batch_size=self._batch_size, random_state=self._random_state,**neural_network_kwargs)
+
         
 
         self.q_vals, self.params = Q_net._buildDQN()
@@ -232,15 +236,23 @@ class Ctrl_deerfault(QNetwork):
         self.load()
         return copycat
         
+
+    def updateLossFunction(self,loss=None,*args,**kwargs):
+        self._compile(loss,*args,**kwargs)
         
-    def _compile(self,loss=None,*args):
+    def _compile(self,loss=None,*args,**kwargs):
         """ compile self.q_vals
         """
         global loss_functions
+        kwargs = dict()
+        if self._clip_value > 0:
+            kwargs["clipvalue"] = self._clip_value
+        if self._clip_norm > 0:
+            kwargs["clipnorm"] = self._clip_norm
         if (self._update_rule=="sgd"):
-            optimizer = SGD(lr=self._lr, momentum=self._momentum, nesterov=False)
+            optimizer = SGD(lr=self._lr, momentum=self._momentum, nesterov=False,**kwargs)
         elif (self._update_rule=="rmsprop"):
-            optimizer = RMSprop(lr=self._lr, rho=self._rho, epsilon=self._rms_epsilon)
+            optimizer = RMSprop(lr=self._lr, rho=self._rho, epsilon=self._rms_epsilon,**kwargs)
         else:
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
         
@@ -248,7 +260,7 @@ class Ctrl_deerfault(QNetwork):
             loss = self._loss
         elif loss in loss_functions.keys():
             loss = loss_functions[loss]
-        self.q_vals.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args))
+        self.q_vals.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
 
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):

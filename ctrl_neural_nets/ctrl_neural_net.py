@@ -77,5 +77,9 @@ class QNetwork(object):
         """
         return self._df
 
+    def updateLossFunction(self, loss=None, args = None,kwargs = None):
+        raise NotImplementedError()
+        
+
 if __name__ == "__main__":
     pass

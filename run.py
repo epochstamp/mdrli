@@ -96,15 +96,10 @@ class Run(object):
         pol_train_args_2 = erase_dict_from_keyword_list(pol_train_args, self.params.pol_train_args)
         pol_train_args = revalidate_dict_from_conf_module(pol_train_args_2, "pol", self.params.pol_train_module)
 
-        backend_nnet_params["input_dimensions"] = env.inputDimensions()
-        backend_nnet_params["n_actions"] = env.nActions()
-        backend_nnet_params["random_state"] = rng
-        backend_nnet_params["batch_size"] = self.params.batch_size
-        neural_net = get_mod_object("neural_nets", self.params.backend_nnet,"neural_net", tuple(), backend_nnet_params,mode=1)
-        ctrl_neural_nets_params["random_state"] = rng
-        ctrl_neural_nets_params["neural_network"] = neural_net
-        ctrl_neural_nets_params["batch_size"] = self.params.batch_size
-        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,), ctrl_neural_nets_params)
+
+        neural_net = get_mod_class("neural_nets", self.params.backend_nnet,"neural_net")
+        ctrl_neural_nets_params["neural_network_kwargs"] = backend_nnet_params
+        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", ctrl_neural_nets_params)
                       
          
         agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, train_policy=pol_train,train_policy_kwargs=pol_train_args, only_full_history=self.params.only_full_history)

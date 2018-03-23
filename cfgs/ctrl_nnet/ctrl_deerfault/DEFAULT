@@ -1,7 +1,8 @@
 rho=0.9
 rms_epsilon=0.0001
 momentum=0
-clip_delta=1.0
+clip_norm=1.0
+clip_value=0.0
 freeze_interval=100
 batch_size=32
 update_rule="rmsprop"

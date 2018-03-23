@@ -4,9 +4,10 @@ from pols.greedyPolicy.pol import GreedyPolicy
 
 class EpsilonGreedyPolicy(Policy):
 
-    def __init__(self, n_actions,random_state,epsilon=0.1):
+    def __init__(self, n_actions,random_state,epsilon=0.1,greedy_exclude_prob=0.0):
         Policy.__init__(self,n_actions,random_state)
         self._epsilon = epsilon
+        self._greedy_exclude_prob = 
         self._randomPolicy = RandomPolicy(n_actions,random_state)
         self._greedyPolicy = GreedyPolicy(n_actions,random_state)
 
@@ -14,7 +15,7 @@ class EpsilonGreedyPolicy(Policy):
 
 
     def action(self, state):
-        if self.random_state.rand() <= self._epsilon:
+        if self.random_state.rand() <= self._epsilon:                
             action, V = self._randomPolicy.action(state)
         else:
             action, V = self._greedyPolicy.action(state)

@@ -79,7 +79,7 @@ class SkillKeeperController(Controller):
                     else:
                         self._ts.remove(i)
                         
-            agent._network._compile("skillkeeper_loss",skillkeeper_mode, rewards,agent.discountFactor(),t_klds,q_targs,q_next_targs)
+            agent._network.updateLossFunction("skillkeeper_loss",skillkeeper_mode, rewards,agent.discountFactor(),t_klds,q_targs,q_next_targs)
 
 
     def onStart(self,agent):
