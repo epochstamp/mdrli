@@ -99,7 +99,7 @@ class Run(object):
 
         neural_net = get_mod_class("neural_nets", self.params.backend_nnet,"neural_net")
         ctrl_neural_nets_params["neural_network_kwargs"] = backend_nnet_params
-        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", ctrl_neural_nets_params)
+        ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,),ctrl_neural_nets_params, mode=2)
                       
          
         agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, train_policy=pol_train,train_policy_kwargs=pol_train_args, only_full_history=self.params.only_full_history)

@@ -18,9 +18,12 @@ import numpy as np
 import copy
 import sys
 sys.path.insert(0, 'utils/cartpole')
-sys.path.insert(0, 'utils')
+sys.path.insert(0, 'utils/')
+sys.path.insert(0, 'envs/')
+sys.path.insert(0, '.')
 from render_movie import save_mp4
 from envs.env import Environment
+from data.dataset import DataSet
 # Physics constants
 PI = np.pi
 
@@ -50,7 +53,7 @@ class Cartpole(Environment):
         self.min_f = min_f
         self.max_f = max_f
         self._continuous = stepsize <= 0
-        self._n_actions = [[self.min_f,self.max_f]] if self._continuous else int((self.max_f - self.min_f)/stepsize)
+        self._n_actions = [[self.min_f,self.max_f]] if self._continuous else int((self.max_f - self.min_f)/stepsize) + 1
         self.stepsize = stepsize
         self.actions = None
             
@@ -129,7 +132,7 @@ class Cartpole(Environment):
 
         return lastobs
                 
-    def reset(self, mode=0):
+    def reset(self, mode=-1):
         """ Reset environment for a new episode.
 
         Arguments:
@@ -140,6 +143,9 @@ class Cartpole(Environment):
             #Learning set 
             x = self._rng.uniform(-0.5, 0.5)
             theta = self._rng.uniform(-PI/2, PI/2)
+        elif mode == 3:
+            x = 0
+            theta = 0.01
         else:
             if mode == 1:
                 #Validation set
@@ -204,15 +210,14 @@ class Cartpole(Environment):
         return self.convert_repr() 
 
 if __name__ == "__main__":
-    rng = np.random.RandomState(1234)
-    env = MyEnv(rng)
-    env.reset()
+    rng = np.random.RandomState(12345)
+    env = Cartpole(rng,stepsize=10)
+    env.reset(mode=3)
     dataset = DataSet(env)
     
-    
-    for i in range(1000):
-        act = 0
+    act = 1
+    for i in range(200):
         r = env.act(act)
         obs = env.observe()
         dataset.addSample(obs, act, r, False, 0)
-    env.summarizePerformance(dataset)
+    env.summarizePerformance(dataset,"./test/","testoide")
