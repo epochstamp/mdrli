@@ -1,0 +1,6 @@
+init_coeff=float(default=1.0)
+coeff_decay=float(default=1.0)
+coeff_operator=option(plus,mul,default=plus)
+evaluate_on=option(action,epoch,episode,default=action)
+periodicity=integer(min=1,default=1)
+reset_every=option(none,episode,epoch,default=none)

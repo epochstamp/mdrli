@@ -56,8 +56,8 @@ def save_mp4(data, n, video_prefix=""):
     pendulum_time_line.axis([
         0,
         t_max,
-        min(data[:,3])*1.1-.1,
-        max(data[:,3])*1.1
+        -PI,
+        PI
     ])
     pendulum_time_line.set_ylabel('theta 1 (rad)')
     pendulum_time_line.plot(data[:,0], data[:,3],'g-')
@@ -72,8 +72,8 @@ def save_mp4(data, n, video_prefix=""):
     pendulum_time_line.axis([
         0,
         t_max,
-        min(data[:,5])*1.1-.1,
-        max(data[:,5])*1.1
+        -PI,
+        PI
     ])
     pendulum_time_line.plot(data[:,0], data[:,5],'-', color='orange')
 

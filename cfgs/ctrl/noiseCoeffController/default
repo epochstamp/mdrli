@@ -1,0 +1,6 @@
+init_coeff=1.0
+coeff_decay=1
+coeff_operator=plus
+evaluate_on=action
+periodicity=1
+reset_every=none

@@ -17,18 +17,39 @@ import os
 from copy import deepcopy
 
 
-def skillkeeper_loss(ws,y_targs):
-    def loss(y_true,y_pred):
-        a = mean_squared_error(y_true,y_pred)
-        for i in range(len(ws)):
-            a += kullback_leibler_divergence(K.softmax(y_true*ws[i]),K.softmax(K.variable(y_targs[i])))
-        return a
-    keras.losses.loss = loss
-    return loss
 
-loss_functions = {"skillkeeper_loss":skillkeeper_loss}
+def noise_function(name,rng,n_actions):
+       
+    def zero(u,noise_scale):
+        return 0
 
-class Ctrl_deerfault(QNetwork):
+    def linear(u,noise_scale):
+        return u + rng.randn(n_actions) / (linear_coeff)
+
+    def exp(u,noise_scale):
+        return u + rng.randn(n_actions) * 10 ** (-noise_scale)
+
+    def fixed(u,noise_scale):
+        return u + rng.randn(n_actions) * noise_scale
+
+    def covariance(u,noise_scale,p = None):
+        if p is None : return 0
+        if n_actions == 1:
+            std = np.minimum(noise_scale / p(x)[0], 1)
+            action = rng.normal(u,std,size=(1,))
+        else:
+            cov = np.minimum(np.linalg.inv(p(x)[0]) * noise_scale, 1)
+            action = np.random.multivariate_normal(u, cov)
+        return action
+
+    try:
+        return eval(name)
+    except Exception as e:
+        print("Warning : The name does not refer to a valid mapping between name and noise function. Output of the exception : ")
+        print(e)
+    
+
+class Ctrl_naf(QNetwork):
     """
     Deep Q-learning network using Keras (with any backend)
     
@@ -84,14 +105,19 @@ class Ctrl_deerfault(QNetwork):
 
         
 
-        self.q_vals, self.params = Q_net._buildDQN()
+        self.q_naf, self.params, self.naf_components = Q_net._buildDQN()
+       
+
         self._loss = loss
         self._compile()
+        
+        self.next_q_naf, self.next_params, self.next_naf_components = Q_net._buildDQN()
 
-        self.next_q_vals, self.next_params = Q_net._buildDQN()
-
-        #self.next_q_vals.compile(optimizer='rmsprop', loss=self._loss) #The parameters do not matter since training is done on self.q_vals
-        self.next_q_vals.compile(optimizer='sgd', loss='mse')
+        self.V = self.next_naf_components[-1]
+        self.P = self.naf_components[1]
+        self.mu = self.naf_components[0]
+        self.Q = self.naf_components[-2] 
+        self.next_q_naf.set_weights(self.q_naf.get_weights)
         self._resetQHat()
 
     def getAllParams(self):
@@ -106,12 +132,12 @@ class Ctrl_deerfault(QNetwork):
 
     
     def dumpTo(self,out=None):
-        q_vals = self.q_vals
-        next_q_vals = self.next_q_vals
-        q_vals.save("temp.h5")
-        self.q_vals = open("temp.h5","rb").read()
-        next_q_vals.save("temp.h5")
-        self.next_q_vals = open("temp.h5","rb").read()
+        q_naf = self.q_naf
+        next_q_naf = self.next_q_naf
+        q_naf.save("temp.h5")
+        self.q_naf = open("temp.h5","rb").read()
+        next_q_naf.save("temp.h5")
+        self.next_q_naf = open("temp.h5","rb").read()
         os.remove("temp.h5")
         #Remove params - we retrieve them later by load method
         self.params = None
@@ -123,20 +149,20 @@ class Ctrl_deerfault(QNetwork):
     def load(self):
         if hasattr(self,"dumped") and self.dumped:
             f = open("temp.h5","wb")
-            f.write(self.q_vals)
+            f.write(self.q_naf)
             f.close()
-            self.q_vals = load_model("temp.h5")
+            self.q_naf = load_model("temp.h5")
             f = open("temp.h5","wb")
-            f.write(self.next_q_vals)
+            f.write(self.next_q_naf)
             f.close()
-            self.next_q_vals = load_model("temp.h5")
-            layers=self.q_vals.layers
+            self.next_q_naf = load_model("temp.h5")
+            layers=self.q_naf.layers
             
             # Get back params
             self.params = [ param
                         for layer in layers 
                         for param in layer.trainable_weights ]
-            layers=self.next_q_vals.layers
+            layers=self.next_q_naf.layers
             self.next_params = [ param
                         for layer in layers 
                         for param in layer.trainable_weights ]
@@ -165,23 +191,25 @@ class Ctrl_deerfault(QNetwork):
         if self.update_counter % self._freeze_interval == 0:
             self._resetQHat()
         
-        next_q_vals = self.next_q_vals.predict(next_states_val.tolist())
-        
+        next_q_naf = self.next_q_naf.predict(next_states_val.tolist())
+        """
         if(self._double_Q==True):
             next_q_vals_current_qnet=self.q_vals.predict(next_states_val.tolist())
             argmax_next_q_vals=np.argmax(next_q_vals_current_qnet, axis=1)
             max_next_q_vals=next_q_vals[np.arange(self._batch_size),argmax_next_q_vals].reshape((-1, 1))
         else:
             max_next_q_vals=np.max(next_q_vals, axis=1, keepdims=True)
-
+        """
         not_terminals=np.ones_like(terminals_val) ^ terminals_val
+        v = self.V(next_states)
         
-        target = rewards_val + not_terminals * self._df * max_next_q_vals.reshape((-1))
+        y = rewards_val + not_terminals * self._df * np.squeeze(v)
         
-        q_vals=self.q_vals.predict(states_val.tolist())
+        q_vals=self.q([states_val.tolist(), actions_val.tolist()])
 
         # In order to obtain the individual losses, we predict the current Q_vals and calculate the diff
-        q_val=q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]#.reshape((-1, 1))        
+        #q_val=q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]#.reshape((-1, 1))
+        q_val = q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]      
         diff = - q_val + target 
         loss_ind=pow(diff,2)
                 
@@ -191,7 +219,7 @@ class Ctrl_deerfault(QNetwork):
         # Only some elements of next_q_vals are actual value that I target. 
         # My loss should only take these into account.
         # Workaround here is that many values are already "exact" in this update
-        loss=self.q_vals.train_on_batch(states_val.tolist() , q_vals )      
+        loss=self.q_vals.train_on_batch([states_val.tolist(), actions_val.tolist()] , q_vals )      
         self.update_counter += 1        
         # loss*self._n_actions = np.average(loss_ind)
         return np.sqrt(loss),loss_ind
@@ -199,20 +227,8 @@ class Ctrl_deerfault(QNetwork):
     def batchPredict(self, states_val):
         return self.q_vals.predict(states_val.tolist())
 
-    def qValues(self, state_val):
-        """ Get the q values for one belief state
 
-        Arguments
-        ---------
-        state_val : one belief state
-
-        Returns
-        -------
-        The q values for the provided belief state
-        """ 
-        return self.q_vals.predict([np.expand_dims(state,axis=0) for state in state_val])[0]
-
-    def chooseBestAction(self, state):
+    def chooseBestAction(self, state,noise_func="zero", noise_coeff=0):
         """ Get the best action for a belief state
 
         Arguments
@@ -222,10 +238,15 @@ class Ctrl_deerfault(QNetwork):
         Returns
         -------
         The best action : int
-        """        
-        q_vals = self.qValues(state)
-
-        return np.argmax(q_vals),np.max(q_vals)
+        """   
+        if self._noise_functor is None : self._noise_functor = noise_function(noise_func,self._random_state,self._n_actions)     
+        kwargs = {"p" : self.P}
+        try:
+            u = self._noise_functor(self.mu(state)[0],noise_coeff,**kwargs)
+        except:
+            u = self._noise_functor(self.mu(state)[0],noise_coeff)
+        q = self.Q(state,u)
+        return u,q
 
     def getCopy(self):
         """Return a copy of the current
@@ -260,7 +281,7 @@ class Ctrl_deerfault(QNetwork):
             loss = self._loss
         elif loss in loss_functions.keys():
             loss = loss_functions[loss]
-        self.q_vals.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
+        self.q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
 
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):

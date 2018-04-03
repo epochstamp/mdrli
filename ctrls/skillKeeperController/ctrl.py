@@ -20,7 +20,7 @@ class SkillKeeperController(Controller):
         Weight decay for w_kld
     """
 
-    def __init__(self, evaluate_on="action", t_kld = 100., t_decays = 2., periodicity = 2, skillkeeper_mode=0):
+    def __init__(self, evaluate_on="action", t_kld = 100., t_decays = 2., periodicity = 2):
         super(self.__class__, self).__init__()
         self._t_kld = float(t_kld)
         self._t_decay = t_decays
@@ -79,7 +79,7 @@ class SkillKeeperController(Controller):
                     else:
                         self._ts.remove(i)
                         
-            agent._network.updateLossFunction("skillkeeper_loss",skillkeeper_mode, rewards,agent.discountFactor(),t_klds,q_targs,q_next_targs)
+            agent._network.updateLossFunction("skillkeeper_loss", t_klds,q_targs)
 
 
     def onStart(self,agent):

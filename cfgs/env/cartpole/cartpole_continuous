@@ -1,0 +1,9 @@
+g=9.8
+m_cart=1.0
+m_pole=0.1
+l=0.5
+min_f=-10
+max_f=10
+stepsize=0
+r=0
+s=5

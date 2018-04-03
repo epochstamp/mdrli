@@ -212,7 +212,7 @@ class Cartpole(Environment):
 if __name__ == "__main__":
     rng = np.random.RandomState(12345)
     env = Cartpole(rng,stepsize=10)
-    env.reset(mode=3)
+    env.reset(mode=1)
     dataset = DataSet(env)
     
     act = 1
