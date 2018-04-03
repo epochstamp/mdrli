@@ -39,10 +39,11 @@
     help=Neural network backend binded to neural network controller
     default=n_deerfault
     dest=backend_nnet
-[backend-nnet-conf-file]
-    help=Configuration file for neural network backend
+[backend-nnet-args]
+    help=Args for the neural network backend. 1st arg may be either a configuration file or a 'key=value' argument
     dest=backend_nnet_conf_file
-    default=DEFAULT
+    nargs=*
+    action=append
 [batch-size]
     help=Batch size for qlearning training phase
     type=int
@@ -57,10 +58,11 @@
     help=Neural network controller module
     default=ctrl_deerfault
     dest=qnetw_module
-[ctrl-neural-nets-conf-file]
-    help=Configuration file for neural network controller
+[qnetw-args]
+    help=Args for neural network controller. 1st arg may be either a configuration file or a 'key=value' argument
     dest=ctrl_neural_nets_conf_file
-    default=DEFAULT
+    nargs=*
+    action=append
 [attach]
     help=Controllers to attach. Order matters. First sub argument is the name of the controller, second argument is the configuration file or the first overriding argument, and the remainder is argument overriding
     dest=controllers
@@ -71,7 +73,7 @@
     default=epsilonGreedyPolicy
     dest=pol_train_module
 [pol-train-args]
-    help=Class module of the training policy
+    help=Args for the training policy. 1st arg may be either a configuration file or a 'key=value' argument
     dest=pol_train_args
     nargs=*
     action=append
