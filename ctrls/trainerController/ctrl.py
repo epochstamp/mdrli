@@ -18,7 +18,7 @@ class TrainerController(Controller):
         Whether to show an informative message after each episode end (and after a 
         training if [evaluateOn] is 'episode') about the average V value of this episode
     """
-    def __init__(self, evaluate_on='action', periodicity=1, show_episode_avg_V_value=True, show_avg_Bellman_residual=True):
+    def __init__(self, evaluate_on='action', periodicity=1, show_episode_avg_V_value=True, show_avg_Bellman_residual=True, training_repeat=1):
         """Initializer.
         """
         super(self.__class__, self).__init__()
@@ -30,7 +30,7 @@ class TrainerController(Controller):
         self._periodicity = periodicity
         self._show_avg_Bellman_residual = show_avg_Bellman_residual
         self._show_episode_avg_V_value = show_episode_avg_V_value
-
+        self._training_repeat = training_repeat
         self._on_action = "action" == evaluate_on
         self._on_episode = "episode" == evaluate_on
         self._on_epoch = "epoch" == evaluate_on
@@ -70,5 +70,5 @@ class TrainerController(Controller):
 
     def _update(self, agent):
         if self._periodicity <= 1 or self._count % self._periodicity == 0:
-            agent.train()
+            for i in range(self._training_repeat) : agent.train()
         self._count += 1

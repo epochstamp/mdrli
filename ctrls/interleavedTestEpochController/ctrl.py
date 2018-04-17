@@ -4,6 +4,7 @@ import os
 from ctrls.controller import Controller
 import threading
 from multiprocessing import Process 
+import shutil
 
 class InterleavedTestEpochController(Controller):
     """A controller that interleaves a test epoch between training epochs of the agent.
@@ -64,10 +65,13 @@ class InterleavedTestEpochController(Controller):
 
         self._epoch_count = 0
         self._summary_counter = 0
+        
         try:
+            shutil.rmtree(self._path_files + "/", ignore_errors=True)
             os.makedirs(self._path_files)
         except:
             pass
+        
         f = open(self._path_files + "/" + self._prefix_file + "_summary.csv", "w+")
         f.write("epoch;nb_episodes;r_mean;r_var;r_std\n")
         f.close()

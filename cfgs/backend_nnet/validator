@@ -1,2 +1,0 @@
-batch_size=default(32)
-action_as_input=default(False)

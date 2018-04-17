@@ -81,14 +81,17 @@ class Run(object):
         rng = np.random.RandomState(seed)
         np.random.seed(seed)
     
+        
+        
+
+        
+
         conf_env_dir = "cfgs/env/" + self.params.env_module + "/" + self.params.env_conf_file
-        conf_ctrl_neural_nets_dir = "cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file
-        conf_backend_nnet_dir = "cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file
         env_params = parse_conf(conf_env_dir)
         env_params["rng"] = rng
-        ctrl_neural_nets_params = parse_conf(conf_ctrl_neural_nets_dir)
-        backend_nnet_params = parse_conf(conf_backend_nnet_dir)
         env = get_mod_object("envs",self.params.env_module,"env",(rng,), env_params,mode=1)
+
+        
 
         pol_train = get_mod_class("pols",self.params.pol_train_module, "pol")
         self.params.pol_train_args = flatten(self.params.pol_train_args) if self.params.pol_train_args is not None else [] 
@@ -96,15 +99,31 @@ class Run(object):
         pol_train_args_2 = erase_dict_from_keyword_list(pol_train_args, self.params.pol_train_args)
         pol_train_args = revalidate_dict_from_conf_module(pol_train_args_2, "pol", self.params.pol_train_module)
 
+        pol_test = get_mod_class("pols",self.params.pol_test_module, "pol")
+        self.params.pol_test_args = flatten(self.params.pol_test_args) if self.params.pol_test_args is not None else [] 
+        pol_test_args = parse_conf("cfgs/pol/" + self.params.pol_test_module + "/" + self.params.pol_test_args[0]) if len(self.params.pol_test_args) > 0 and isfile("cfgs/pol/" + self.params.pol_test_module + "/" + self.params.pol_test_args[0]) else parse_conf("cfgs/pol/" + self.params.pol_test_module + "/default")
+        pol_test_args_2 = erase_dict_from_keyword_list(pol_test_args, self.params.pol_test_args)
+        pol_test_args = revalidate_dict_from_conf_module(pol_test_args_2, "pol", self.params.pol_test_module)
 
+        self.params.backend_nnet_conf_file= flatten(self.params.backend_nnet_conf_file) if self.params.backend_nnet_conf_file is not None else [] 
+        backend_nnet_params = parse_conf("cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file[0]) if len(self.params.backend_nnet_conf_file) > 0 and isfile("cfgs/backend_nnet/" + self.params.backend_nnet + "/" + self.params.backend_nnet_conf_file[0]) else parse_conf("cfgs/backend_nnet/" + self.params.backend_nnet + "/default")
+        backend_nnet_params_2 = erase_dict_from_keyword_list(backend_nnet_params,self.params.backend_nnet_conf_file)
+        backend_nnet_params = revalidate_dict_from_conf_module(backend_nnet_params_2, "backend_nnet", self.params.backend_nnet)
+        
         neural_net = get_mod_class("neural_nets", self.params.backend_nnet,"neural_net")
+        
+        self.params.ctrl_neural_nets_conf_file = flatten(self.params.ctrl_neural_nets_conf_file) if self.params.ctrl_neural_nets_conf_file is not None else [] 
+        ctrl_neural_nets_params = parse_conf("cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file[0]) if len(self.params.ctrl_neural_nets_conf_file) > 0 and isfile("cfgs/ctrl_nnet/" + self.params.qnetw_module + "/" + self.params.ctrl_neural_nets_conf_file[0]) else parse_conf("cfgs/ctrl_nnet/" + self.params.qnetw_module + "/DEFAULT")
+        ctrl_neural_nets_params_2 = erase_dict_from_keyword_list(ctrl_neural_nets_params,self.params.ctrl_neural_nets_conf_file)
+        ctrl_neural_nets_params = revalidate_dict_from_conf_module(ctrl_neural_nets_params_2, "ctrl_neural_net", self.params.qnetw_module)
+
+        ctrl_neural_nets_params["neural_network"] = neural_net
         ctrl_neural_nets_params["neural_network_kwargs"] = backend_nnet_params
         ctrl_neural_nets_params["batch_size"] = self.params.batch_size
         ctrl_neural_net = get_mod_object("ctrl_neural_nets", self.params.qnetw_module, "ctrl_neural_net", (env,),ctrl_neural_nets_params, mode=0)
         
-        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, train_policy=pol_train,train_policy_kwargs=pol_train_args, only_full_history=self.params.only_full_history)
+        agent = NeuralAgent([env], [ctrl_neural_net], replay_memory_size=self.params.replay_memory_size, replay_start_size=None, batch_size=self.params.batch_size, random_state=rng, exp_priority=self.params.exp_priority, train_policy=pol_train,train_policy_kwargs=pol_train_args, test_policy=pol_test, test_policy_kwargs=pol_test_args, only_full_history=self.params.only_full_history)
        
-
 
         for tc in self.params.controllers:
                 len_tc = len(tc)                
@@ -146,7 +165,6 @@ class Run(object):
                 else:
                     conf_ctrl = parse_conf("cfgs/ctrl/" + s + "/default")
                 controller = get_mod_object("ctrls",s,"ctrl",tuple(),conf_ctrl,mode=0)
-                
                 agent.attach(controller)
         agent.run(self.params.epochs, self.params.max_size_episode)
                 

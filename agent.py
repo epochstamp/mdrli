@@ -16,6 +16,7 @@ from data.dataset import DataSet,SliceError
 from ctrls.controller import Controller
 from deer.helper import tree 
 from pols.epsilonGreedyPolicy.pol import EpsilonGreedyPolicy
+from pols.greedyPolicy.pol import GreedyPolicy
 from pols.epsilonGreedyLowFreqPolicy.pol import EpsilonGreedyLowFreqPolicy
 
 class NeuralAgent(object):
@@ -50,7 +51,7 @@ class NeuralAgent(object):
         observations before the beginning of the episode
     """
 
-    def __init__(self, environments, q_networks, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, train_policy_kwargs=None, test_policy=None, only_full_history=True,init_env=0):
+    def __init__(self, environments, q_networks, replay_memory_size=1000000, replay_start_size=None, batch_size=32, random_state=np.random.RandomState(), exp_priority=0, train_policy=None, train_policy_kwargs=None, test_policy=None, test_policy_kwargs=None, only_full_history=True,init_env=0):
         
         
         self._controllers = []
@@ -80,7 +81,7 @@ class NeuralAgent(object):
         self._selected_action = -1
         self._selected_batch = None
         self._train_policies = [None] * len(environments)
-
+        self._test_policies = [None] * len(environments)
         self._states = [None] * len(self._environments)
         for i in range(len(self._environments)):
             self._states[i] = []
@@ -100,11 +101,13 @@ class NeuralAgent(object):
                 self._train_policies[i] = train_policy(self._environments[i].nActions(), random_state,**train_policy_kwargs)
             self._train_policies[i].setAttribute("model",q_networks[i])
         
-        if (test_policy is None):
-            self._test_policy = EpsilonGreedyPolicy(self._environments[i].nActions(), random_state, 0.)
-            self._test_policy.setAttribute("model",q_networks[i])
-        else:
-            self._test_policy = test_policy
+            if (test_policy is None):
+                self._test_policies[i] = GreedyPolicy(self._environments[i].nActions(), random_state)   
+            else:
+                self._test_policies[i] = test_policy(self._environments[i].nActions(), random_state,**test_policy_kwargs)
+            self._test_policies[i].setAttribute("model",q_networks[i])
+
+        self._test_policy = self._test_policies[self._e]
         self._train_policy = self._train_policies[self._e]
         self._state = self._states[self._e]
 
@@ -121,6 +124,7 @@ class NeuralAgent(object):
                 self._tmp_dataset.flush()
         self._environment = self._environments[self._e]
         self._train_policy = self._train_policies[self._e]
+        self._test_policy = self._test_policies[self._e]
         self._network = self._networks[self._e]
 
     def setControllersActive(self, toDisable, active):
@@ -246,6 +250,7 @@ class NeuralAgent(object):
             loss, loss_ind = self._network.train(states, actions, rewards, next_states, terminals)
             self._training_loss_averages.append(loss)
             if (self._exp_priority):
+                
                 self._dataset.updatePriorities(pow(loss_ind,self._exp_priority)+0.0001, rndValidIndices[1])
             self._selected_batch = None
         except SliceError as e:

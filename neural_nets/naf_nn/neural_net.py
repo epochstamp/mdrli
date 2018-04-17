@@ -6,9 +6,12 @@ Neural network using Keras (called by q_net_keras) designed for Normalized Advan
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, LeakyReLU, Reshape, Permute, concatenate, PReLU, ELU, ThresholdedReLU, Softmax, Lambda
+from keras.layers import Input, Layer, Dense, Flatten, Activation, Conv2D, MaxPooling2D, LeakyReLU, Reshape, Permute, concatenate, PReLU, ELU, ThresholdedReLU, Softmax, Lambda, Dropout, BatchNormalization, GaussianDropout
 from keras.layers.normalization import BatchNormalization
+from keras.losses import mean_squared_error, kullback_leibler_divergence
 from keras import backend as K
+from copy import deepcopy
+from keras.regularizers import l2, l1, Regularizer
 import theano.tensor as T
 lays = dict()
 lays["dense"] = Dense
@@ -21,49 +24,49 @@ activations["thresholdedrelu"] = ThresholdedReLU
 activations["softmax"] = Softmax
 activations["batchnorm"] = BatchNormalization
 
-def _L(len_u,x):
-	if len_u == 1:
+def _L(len_u):
+    if len_u == 1:
         return lambda x : K.exp(x)
     else:
         def _subL(x):
-		    # initialize with zeros
-			batch_size = x.shape[0]
-			a = T.zeros((batch_size, num_actuators, num_actuators))
-			# set diagonal elements
-			batch_idx = T.extra_ops.repeat(T.arange(batch_size), num_actuators)
-			diag_idx = T.tile(T.arange(num_actuators), batch_size)
-			b = T.set_subtensor(a[batch_idx, diag_idx, diag_idx], T.flatten(T.exp(x[:, :num_actuators])))
-			# set lower triangle
-			cols = np.concatenate([np.array(range(i), dtype=np.uint) for i in range(num_actuators)])
-			rows = np.concatenate([np.array([i]*i, dtype=np.uint) for i in range(num_actuators)])
-			cols_idx = T.tile(T.as_tensor_variable(cols), batch_size)
-			rows_idx = T.tile(T.as_tensor_variable(rows), batch_size)
-			batch_idx = T.extra_ops.repeat(T.arange(batch_size), len(cols))
-			c = T.set_subtensor(b[batch_idx, rows_idx, cols_idx], T.flatten(x[:, num_actuators:]))
-		return _subL
+            # initialize with zeros
+            batch_size = x.shape[0]
+            a = T.zeros((batch_size, num_actuators, num_actuators))
+            # set diagonal elements
+            batch_idx = T.extra_ops.repeat(T.arange(batch_size), num_actuators)
+            diag_idx = T.tile(T.arange(num_actuators), batch_size)
+            b = T.set_subtensor(a[batch_idx, diag_idx, diag_idx], T.flatten(T.exp(x[:, :num_actuators])))
+            # set lower triangle
+            cols = np.concatenate([np.array(range(i), dtype=np.uint) for i in range(num_actuators)])
+            rows = np.concatenate([np.array([i]*i, dtype=np.uint) for i in range(num_actuators)])
+            cols_idx = T.tile(T.as_tensor_variable(cols), batch_size)
+            rows_idx = T.tile(T.as_tensor_variable(rows), batch_size)
+            batch_idx = T.extra_ops.repeat(T.arange(batch_size), len(cols))
+            c = T.set_subtensor(b[batch_idx, rows_idx, cols_idx], T.flatten(x[:, num_actuators:]))
+        return _subL
 
-def _P(len_u,x):
-	if len_u == 1:
+def _P(len_u):
+    if len_u == 1:
         return lambda x : x*x
     else:
         return lambda x : K.batch_dot(x, K.permute_dimensions(x, (0,2,1)))
 
-def _A(len_u,x):
-	if len_u == 1:
+def _A(len_u):
+    if len_u == 1:
         def _subA(x):
-			m,p,u = x
-            return -((u-m) * (u-m)) * p 
+            m,p,u = x
+            return -(1/2.0)*((u-m) * (u-m)) * p 
     else:
         def _subA(x):
             m, p, u = x
-    		d = K.expand_dims(u - m, -1)
-			return -K.batch_dot(K.batch_dot(K.permute_dimensions(d, (0,2,1)), p), d)
+            d = K.expand_dims(u - m, -1)
+            return -(1/2.0)*K.batch_dot(K.batch_dot(K.permute_dimensions(d, (0,2,1)), p), d)
     return _subA
 
-def _Q(len_u,x):
+def _Q(len_u):
     def _subQ(x):
-        v, a = t
-    	return v + a
+        v, a = x
+        return v + a
     return _subQ
 
 
@@ -81,12 +84,11 @@ class Naf_nn():
     action_as_input : Boolean
         Whether the action is given as input or as output
     """
-    def __init__(self, batch_size=32, input_dimensions=[], n_actions=2, random_state=np.random.RandomState(), layers = [{"type" : "dense", "activation" : "prelu", "activation_kwargs" : {}, "units" : 50},{"type" : "dense", "activation" : "prelu", "activation_kwargs" : {}, "units" : 20}]): 
+    def __init__(self, batch_size=32, input_dimensions=[], n_actions=2, random_state=np.random.RandomState(), layers = [{"type" : "dense", "activation" : "leakyrelu", "activation_kwargs" : {}, "units" : 100},{"type" : "dense", "activation" : "leakyrelu", "activation_kwargs" : {}, "units" : 100}]): 
         self._input_dimensions=input_dimensions
         self._batch_size=batch_size
         self._random_state=random_state
         self._n_actions=n_actions
-        self._action_as_input=action_as_input
         self._layers = layers
 
     def _buildDQN(self):
@@ -147,9 +149,9 @@ class Naf_nn():
 
         
         if ( isinstance(self._n_actions,int)):
-            raise Exception("Error, env.nActions() must be a continuous set when using actions as inputs in the Naf NN")
+            raise Exception("Error, env.nActions() must be a continuous set in the Naf NN")
 
-		x_input = list(inputs)
+        x_input = list(inputs)
         u_input = Input(shape=(len(self._n_actions),))
         xu_input = x_input + [u_input]
         #inputs.append(u_input)
@@ -159,42 +161,49 @@ class Naf_nn():
             x = concatenate(outs_conv)
         else:
             x= outs_conv [0]
-        
+        #x = BatchNormalization()(x)
+        #x = Dropout(rate=0.25, seed=self._random_state.seed())(x)#
         # we stack a deep fully-connected network on top
-
+        #x = GaussianDropout(rate=0.1)(x)
         for l in self._layers : 
             x = lays[l["type"]](l["units"])(x)
+            
             try : 
                 x = Activation(l["activation"],**l["activation_kwargs"])(x)
             except:
                 try:
                     x = activations[l["activation"]](**l["activation_kwargs"])(x)
                 except:
-                    print("Warning : the activation layer you have requested is not available. Activation relu will be used")
+                    print("Warning : the activation layer you have requested is not available. Activation relu will be used instead.")
                     x = Activation("relu")(x)
+            #x = BatchNormalization()(x)
+            #x = Dropout(rate=0.5,seed=self._random_state.seed())(x)#
+            #x = GaussianDropout(rate=0.25)(x)
         len_u = len(self._n_actions)
         v = Dense(1)(x)
-        m = Dense(len_u)
-        l0 = Dense(len_u*(len_u+1) // 2)(h)
+        m = Dense(len_u)(x)
+        l0 = Dense(len_u*(len_u+1) // 2)(x)
+
         l = Lambda(_L(len_u),output_shape=(len_u,len_u))(l0)
         p = Lambda(_P(len_u),output_shape=(len_u,len_u))(l)
-        a = Lambda(_A(len_u),output_shape=(len_u))([m,p,u_input])
-        q = Lambda(_Q(len_u),output_shape=(len_u))([v,a])
+        a = Lambda(_A(len_u),output_shape=(len_u,))([m,p,u_input])
+        q = Lambda(_Q(len_u),output_shape=(len_u,))([v,a])
 
-        fmu = K.function([K.learning_phase(), x_input], m)
-		mu = lambda x: fmu([0, x_input])
 
-		fP = K.function([K.learning_phase(), x_input], p)
-		P = lambda x: fP([0, x_input])
+        fmu = K.function([*x_input], [m])
+        mu = lambda x: fmu([*x])
 
-		fA = K.function([K.learning_phase(), x_input,u_input], a)
-		A = lambda x, u: fA([0, x_input, u_input])
+        fP = K.function([*x_input], [p])
+        P = lambda x: fP([*x])
 
-		fQ = K.function([K.learning_phase(), x_input,u_input], q)
-		Q = lambda x, u: fQ([0, x_input, u_input])
+        fA = K.function([*xu_input], [a])
+        A = lambda xu: fA([*xu])
 
-        fV = K.function([K.learning_phase(), x_input], v)
-		V = lambda x: fV([0, x_input])
+        fQ = K.function([*xu_input], [q])
+        Q = lambda xu: fQ([*xu])
+
+        fV = K.function([*x_input], [v])
+        V = lambda x: fV([*x])
         """
         if (self._action_as_input==False):
             if ( isinstance(self._n_actions,int)):
@@ -204,8 +213,8 @@ class Naf_nn():
         else:
             out = Dense(1)(x)
         """
-                
-        model = Model(inputs=xu_inputs, outputs=q)
+        old_Q = Input(shape=(len_u,))     
+        model = Model(inputs=xu_input + [old_Q], outputs=q)
         layers=model.layers
         
         # Grab all the parameters together.
@@ -213,7 +222,7 @@ class Naf_nn():
                     for layer in layers 
                     for param in layer.trainable_weights ]
         
-        return model, params, [mu,P,A,Q,V]
+        return model, params, {"mu":mu,"P":P,"A":A,"Q":Q,"V":V,"oldQ":old_Q}
 
 
 if __name__ == '__main__':

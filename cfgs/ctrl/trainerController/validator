@@ -1,3 +1,5 @@
 evaluate_on=option(action,episode,epoch,default=action)
 show_episode_avg_V_value=boolean(default=False)
 show_avg_Bellman_residual=boolean(default=False)
+training_repeat=integer(min=1,default=1)
+periodicity=integer(min=1,default=1)

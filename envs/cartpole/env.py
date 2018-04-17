@@ -79,13 +79,15 @@ class Cartpole(Environment):
                 
                 self.actions = np.arange(self.min_f, self.max_f + self.stepsize, self.stepsize)
             force = self.actions[action]
-
+        
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
         n_tau = N_TAU
         delta_t = DELTA_T
 
         tau = delta_t / n_tau
+
+
         for i in range(n_tau):
             # Physics -> See wiki for the formulas
         
@@ -107,7 +109,7 @@ class Cartpole(Environment):
                 self._to_range(theta + tau*theta_dot),
                 theta_dot + tau*theta_dd,
                 ]
-    
+        
         # Simple reward
         reward = - abs(theta) 
         reward -= abs(self._last_observation[0])/2.
@@ -117,7 +119,6 @@ class Cartpole(Environment):
             self._last_observation[0]=-S
         if(self._last_observation[0]>S):
             self._last_observation[0]=S
- 
         return reward
 
     def convert_repr(self):

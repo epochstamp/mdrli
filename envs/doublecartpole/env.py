@@ -196,8 +196,7 @@ class Doublecartpole(Environment):
 
    
             
-                lhs_mat = D
-                print((C*np.asarray([x_dot,theta_1_dot,theta_2_dot])))               
+                lhs_mat = D           
                 rhs_mat = Hu-(C*np.asarray([x_dot,theta_1_dot,theta_2_dot]))-G
                 return np.linalg.solve(lhs_mat,rhs_mat)[i]
                 

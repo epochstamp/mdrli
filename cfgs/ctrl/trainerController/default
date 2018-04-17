@@ -1,3 +1,5 @@
 evaluate_on=action
 show_episode_avg_V_value=True
 show_avg_Bellman_residual=True
+training_repeat=1
+periodicity=1

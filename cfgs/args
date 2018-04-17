@@ -22,8 +22,8 @@
     default=1000000
     dest=replay_memory_size
 [exp-priority]
-    help=0 for regular experience replay, 1 for prioritized experience replay
-    type=int
+    help=0 for uniform experience replay, greater is how much priority is used
+    type=float
     default=0
     dest=exp_priority
 [out-prefix]
@@ -75,5 +75,14 @@
 [pol-train-args]
     help=Args for the training policy. 1st arg may be either a configuration file or a 'key=value' argument
     dest=pol_train_args
+    nargs=*
+    action=append
+[pol-test-module]
+    help=Class module of the test policy
+    default=greedyPolicy
+    dest=pol_test_module
+[pol-test-args]
+    help=Args for the testing policy. 1st arg may be either a configuration file or a 'key=value' argument
+    dest=pol_test_args
     nargs=*
     action=append

@@ -5,10 +5,10 @@ Code for general deep Q-learning using Keras that can take as inputs scalars, ve
 """
 
 import numpy as np
-from keras.optimizers import SGD,RMSprop
+from keras.optimizers import SGD,RMSprop, Adam
 from keras import backend as K
 import keras.losses
-from keras.losses import mean_squared_error, kullback_leibler_divergence
+from keras.losses import mean_squared_error, kullback_leibler_divergence, logcosh
 from ctrl_neural_nets.ctrl_neural_net import QNetwork
 from deer.q_networks.NN_keras import NN # Default Neural network used
 from keras.models import load_model
@@ -16,38 +16,18 @@ from joblib import dump,load
 import os
 from copy import deepcopy
 
-
-
-def noise_function(name,rng,n_actions):
-       
-    def zero(u,noise_scale):
-        return 0
-
-    def linear(u,noise_scale):
-        return u + rng.randn(n_actions) / (linear_coeff)
-
-    def exp(u,noise_scale):
-        return u + rng.randn(n_actions) * 10 ** (-noise_scale)
-
-    def fixed(u,noise_scale):
-        return u + rng.randn(n_actions) * noise_scale
-
-    def covariance(u,noise_scale,p = None):
-        if p is None : return 0
-        if n_actions == 1:
-            std = np.minimum(noise_scale / p(x)[0], 1)
-            action = rng.normal(u,std,size=(1,))
-        else:
-            cov = np.minimum(np.linalg.inv(p(x)[0]) * noise_scale, 1)
-            action = np.random.multivariate_normal(u, cov)
-        return action
-
-    try:
-        return eval(name)
-    except Exception as e:
-        print("Warning : The name does not refer to a valid mapping between name and noise function. Output of the exception : ")
-        print(e)
+#def cross_covariance(x,y):
     
+
+def weighted_mse_kl_divergence(old_q):
+    def loss(y_true,y_pred):
+        #y_true = K.clip(y_true,K.epsilon(),1)
+        #y_pred = K.clip(y_pred,K.epsilon(),1)
+        rt = K.mean((K.softmax(old_q)/K.softmax(y_pred)))
+        c = K.clip(rt,0.8,1.2)
+        return K.minimum(rt,c) * y_true + mean_squared_error(y_true,y_pred)
+    return loss
+
 
 class Ctrl_naf(QNetwork):
     """
@@ -80,7 +60,7 @@ class Ctrl_naf(QNetwork):
         default is deer.qnetworks.NN_keras
     """
 
-    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_value=0,clip_norm=0, freeze_interval=1000, batch_size=32, update_rule="rmsprop", random_state=np.random.RandomState(), double_Q=False, neural_network=NN, neural_network_kwargs={}, loss='mse'):
+    def __init__(self, environment, rho=0.9, rms_epsilon=0.0001, momentum=0, clip_value=0,clip_norm=0.0, freeze_interval=1000, tau=0.001, batch_size=32, update_rule="adam", random_state=np.random.RandomState(), double_Q=False, neural_network=NN, neural_network_kwargs={}, loss='mse'):
         """ Initialize environment
         
         """
@@ -96,6 +76,7 @@ class Ctrl_naf(QNetwork):
         self._double_Q = double_Q
         self._random_state = random_state
         self.update_counter = 0
+        self.tau = tau
         if "input_dimensions" not in neural_network_kwargs:
             neural_network_kwargs["input_dimensions"] = self._input_dimensions
         if "n_actions" not in neural_network_kwargs:
@@ -107,17 +88,19 @@ class Ctrl_naf(QNetwork):
 
         self.q_naf, self.params, self.naf_components = Q_net._buildDQN()
        
-
+        self._noise_functor = None
         self._loss = loss
-        self._compile()
+        self._compile(weighted_mse_kl_divergence,old_q=self.naf_components["oldQ"])
         
         self.next_q_naf, self.next_params, self.next_naf_components = Q_net._buildDQN()
 
-        self.V = self.next_naf_components[-1]
-        self.P = self.naf_components[1]
-        self.mu = self.naf_components[0]
-        self.Q = self.naf_components[-2] 
-        self.next_q_naf.set_weights(self.q_naf.get_weights)
+        self.V_next = self.next_naf_components["V"]
+        self.mu_next = self.next_naf_components["mu"]
+        self.P = self.naf_components["P"]
+        self.mu = self.naf_components["mu"]
+        self.Q = self.naf_components["Q"] 
+        self.V = self.naf_components["V"]
+        self.oldQ = self.naf_components["oldQ"]
         self._resetQHat()
 
     def getAllParams(self):
@@ -188,10 +171,16 @@ class Ctrl_naf(QNetwork):
         Average loss of the batch training (RMSE)
         Individual (square) losses for each tuple
         """
+
+        
         if self.update_counter % self._freeze_interval == 0:
+            print("coucou")
             self._resetQHat()
         
-        next_q_naf = self.next_q_naf.predict(next_states_val.tolist())
+         
+        #next_u = self.mu_next(next_states_val.tolist())
+        #next_q_naf = self.next_q_naf.predict(np.concatenate(next_states_val.tolist(), next_u))
+        
         """
         if(self._double_Q==True):
             next_q_vals_current_qnet=self.q_vals.predict(next_states_val.tolist())
@@ -200,35 +189,82 @@ class Ctrl_naf(QNetwork):
         else:
             max_next_q_vals=np.max(next_q_vals, axis=1, keepdims=True)
         """
+        #Normalize actions
+        k=0
+        max_new = 1
+        min_new = -1
+        """
+        print("Before transform")
+        print (actions_val)
+        for a in self._n_actions:
+            max_old = max(a[1], np.amax(actions_val[:,k]))
+            min_old = min(a[0], np.amin(actions_val[:,k]))
+            
+            actions_val[:,k] = ((max_new-min_new)/(max_old-min_old)) * (actions_val[:,k] - max_old) + max_new 
+            k+=1
+        print("After transform")
+        """
+        #print (actions_val)
+
+        tau = self.tau
         not_terminals=np.ones_like(terminals_val) ^ terminals_val
-        v = self.V(next_states)
-        
+        v1 = self.V_next(next_states_val)
+        v2 = self.V(next_states_val)
+        s = np.array(states_val.tolist())
+        a = np.expand_dims(np.array(actions_val.tolist()),axis=0)
+        sa = np.concatenate((s,a), axis=0)
+        v = ((1-tau) * np.array(v1) + (tau) * np.array(v2))
+        qsa = self.Q(sa)
+        #print(qsa)
         y = rewards_val + not_terminals * self._df * np.squeeze(v)
         
-        q_vals=self.q([states_val.tolist(), actions_val.tolist()])
+
+        
+        
+        #print (np.stack((states_val.tolist(),actions_val.tolist())))
+        #print(np.concatenate(np.array(states_val.tolist()),actions_val.reshape((-1,))).shape)
+        q_vals=np.squeeze(np.array(qsa))
+
 
         # In order to obtain the individual losses, we predict the current Q_vals and calculate the diff
         #q_val=q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]#.reshape((-1, 1))
-        q_val = q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]      
-        diff = - q_val + target 
-        loss_ind=pow(diff,2)
-                
-        q_vals[  np.arange(self._batch_size), actions_val.reshape((-1,))  ] = target
+        #q_val = q_vals[np.arange(self._batch_size), actions_val.reshape((-1,))]      
+        diff = y - q_vals
+        loss_ind=diff*diff
                 
         # Is it possible to use something more flexible than this? 
         # Only some elements of next_q_vals are actual value that I target. 
         # My loss should only take these into account.
         # Workaround here is that many values are already "exact" in this update
-        loss=self.q_vals.train_on_batch([states_val.tolist(), actions_val.tolist()] , q_vals )      
+        states_actions = states_val.tolist()
+        states_actions.append(actions_val)
+        states_actions.append(np.clip(np.array(np.squeeze(qsa)),K.epsilon(),1))
+        loss = 0
+        k = 1
+        for _ in range(k):
+            l = self.q_naf.train_on_batch(states_actions , y )   
+            #print(l)
+            loss+= (1/float(k)) * l  
+        #print("Loss = " + str(loss))
         self.update_counter += 1        
         # loss*self._n_actions = np.average(loss_ind)
+ 
+        #Update target weights
+        
+        
+        w = self.q_naf.get_weights()
+        next_w = self.next_q_naf.get_weights()
+        for i in range(len(w)):
+            next_w[i] = tau * w[i] + (1-tau) * next_w[i]
+        self.next_q_naf.set_weights(next_w)
+        
         return np.sqrt(loss),loss_ind
 
     def batchPredict(self, states_val):
-        return self.q_vals.predict(states_val.tolist())
+        return self.V(states_val)
 
 
-    def chooseBestAction(self, state,noise_func="zero", noise_coeff=0):
+    def chooseBestAction(self, state):
         """ Get the best action for a belief state
 
         Arguments
@@ -239,14 +275,31 @@ class Ctrl_naf(QNetwork):
         -------
         The best action : int
         """   
-        if self._noise_functor is None : self._noise_functor = noise_function(noise_func,self._random_state,self._n_actions)     
-        kwargs = {"p" : self.P}
-        try:
-            u = self._noise_functor(self.mu(state)[0],noise_coeff,**kwargs)
-        except:
-            u = self._noise_functor(self.mu(state)[0],noise_coeff)
-        q = self.Q(state,u)
+
+        s = [np.expand_dims(s,axis=0) for s in state]
+        mus = self.mu(s)
+        u = mus[0][0]
+        s.append(mus[0])
+        q = self.Q(s)
         return u,q
+
+    def evalAction(self, state, action):
+        """ Evaluate an action
+
+        Arguments
+        ---------
+        state : one belief state
+
+        Returns
+        -------
+        The best action : int
+        """     
+        s = [np.expand_dims(s,axis=0) for s in state]
+
+
+        s.append([np.asarray(action)])
+        q = self.Q(s)
+        return q
 
     def getCopy(self):
         """Return a copy of the current
@@ -257,11 +310,8 @@ class Ctrl_naf(QNetwork):
         self.load()
         return copycat
         
-
-    def updateLossFunction(self,loss=None,*args,**kwargs):
-        self._compile(loss,*args,**kwargs)
         
-    def _compile(self,loss=None,*args,**kwargs):
+    def _compile(self,loss=None,**lkwargs):
         """ compile self.q_vals
         """
         global loss_functions
@@ -274,18 +324,17 @@ class Ctrl_naf(QNetwork):
             optimizer = SGD(lr=self._lr, momentum=self._momentum, nesterov=False,**kwargs)
         elif (self._update_rule=="rmsprop"):
             optimizer = RMSprop(lr=self._lr, rho=self._rho, epsilon=self._rms_epsilon,**kwargs)
+        elif (self._update_rule=="adam"):
+            optimizer = Adam(lr=self._lr,**kwargs)
         else:
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
-        
         if loss is None:
             loss = self._loss
-        elif loss in loss_functions.keys():
-            loss = loss_functions[loss]
-        self.q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
-
+        self.q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(**lkwargs))
+        #self.next_q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):
             K.set_value(next_param,K.get_value(param))
 
-        self._compile() # recompile to take into account new optimizer parameters that may have changed since
+        self._compile(weighted_mse_kl_divergence,old_q=self.naf_components["oldQ"]) # recompile to take into account new optimizer parameters that may have changed since
                         # self._compile() was called in __init__. FIXME: this call should ideally be done elsewhere

@@ -6,7 +6,7 @@ from ctrls.controller import Controller
 def plus(a,b):
         return a+b
 
-def mul(a,b)
+def mul(a,b):
         return a*b
 
 class NoiseCoeffController(Controller):
@@ -38,7 +38,7 @@ class NoiseCoeffController(Controller):
         init_coeff = float(init_coeff)
         coeff_decay = int(coeff_decay)
         self._count = 0
-        self._init_coeff = initial_coeff
+        self._init_coeff = init_coeff
         self._coeff = init_coeff
         self._coeff_decay = coeff_decay
         self._periodicity = periodicity
