@@ -1,2 +1,1 @@
-noise_func=option(zero,linear,exp,fixed,covariance,default=zero)
-noise_coeff=float(default=1)
+noisy=boolean(default=True)

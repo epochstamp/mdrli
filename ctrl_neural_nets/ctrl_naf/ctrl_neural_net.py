@@ -19,13 +19,15 @@ from copy import deepcopy
 #def cross_covariance(x,y):
     
 
-def weighted_mse_kl_divergence(old_q):
+def weighted_mse_kl_divergence(old_q,old_m,curr_m):
     def loss(y_true,y_pred):
         #y_true = K.clip(y_true,K.epsilon(),1)
         #y_pred = K.clip(y_pred,K.epsilon(),1)
-        rt = K.mean((K.softmax(old_q)/K.softmax(y_pred)))
-        c = K.clip(rt,0.8,1.2)
-        return K.minimum(rt,c) * y_true + mean_squared_error(y_true,y_pred)
+        #rt = K.mean((K.softmax(old_q)/K.softmax(y_pred)))
+        #c = K.clip(rt,0.8,1.2)
+        q_true = y_true
+        q_pred = y_pred
+        return mean_squared_error(q_true,q_pred) + K.exp(kullback_leibler_divergence(old_q,q_pred))
     return loss
 
 
@@ -89,10 +91,17 @@ class Ctrl_naf(QNetwork):
         self.q_naf, self.params, self.naf_components = Q_net._buildDQN()
        
         self._noise_functor = None
-        self._loss = loss
-        self._compile(weighted_mse_kl_divergence,old_q=self.naf_components["oldQ"])
+        self._loss = self.naf_components["loss"]
+        self._compile(loss=self._loss)
         
         self.next_q_naf, self.next_params, self.next_naf_components = Q_net._buildDQN()
+
+        #self.S = self.naf_components["sigma"]
+        #self.S_next = self.next_naf_components["sigma"] 
+        
+        self.noisymu = self.naf_components["noisymu"]
+        self.sigma = self.naf_components["sigma"]
+        self.noisymu_next = self.next_naf_components["noisymu"] 
 
         self.V_next = self.next_naf_components["V"]
         self.mu_next = self.next_naf_components["mu"]
@@ -100,7 +109,8 @@ class Ctrl_naf(QNetwork):
         self.mu = self.naf_components["mu"]
         self.Q = self.naf_components["Q"] 
         self.V = self.naf_components["V"]
-        self.oldQ = self.naf_components["oldQ"]
+        self.loss = self.naf_components["loss"]
+        #self.oldQ = self.naf_components["oldQ"]
         self._resetQHat()
 
     def getAllParams(self):
@@ -174,7 +184,6 @@ class Ctrl_naf(QNetwork):
 
         
         if self.update_counter % self._freeze_interval == 0:
-            print("coucou")
             self._resetQHat()
         
          
@@ -189,21 +198,7 @@ class Ctrl_naf(QNetwork):
         else:
             max_next_q_vals=np.max(next_q_vals, axis=1, keepdims=True)
         """
-        #Normalize actions
-        k=0
-        max_new = 1
-        min_new = -1
-        """
-        print("Before transform")
-        print (actions_val)
-        for a in self._n_actions:
-            max_old = max(a[1], np.amax(actions_val[:,k]))
-            min_old = min(a[0], np.amin(actions_val[:,k]))
-            
-            actions_val[:,k] = ((max_new-min_new)/(max_old-min_old)) * (actions_val[:,k] - max_old) + max_new 
-            k+=1
-        print("After transform")
-        """
+
         #print (actions_val)
 
         tau = self.tau
@@ -215,10 +210,9 @@ class Ctrl_naf(QNetwork):
         sa = np.concatenate((s,a), axis=0)
         v = ((1-tau) * np.array(v1) + (tau) * np.array(v2))
         qsa = self.Q(sa)
-        #print(qsa)
+        
         y = rewards_val + not_terminals * self._df * np.squeeze(v)
         
-
         
         
         #print (np.stack((states_val.tolist(),actions_val.tolist())))
@@ -238,12 +232,15 @@ class Ctrl_naf(QNetwork):
         # Workaround here is that many values are already "exact" in this update
         states_actions = states_val.tolist()
         states_actions.append(actions_val)
-        states_actions.append(np.clip(np.array(np.squeeze(qsa)),K.epsilon(),1))
+        #states_actions.append(np.squeeze(qsa))
+        states_actions.append(y)
+        states_actions.append(np.squeeze(self.mu(s)))
+        states_actions.append(np.squeeze(self.sigma(s)))
+        
         loss = 0
         k = 1
         for _ in range(k):
             l = self.q_naf.train_on_batch(states_actions , y )   
-            #print(l)
             loss+= (1/float(k)) * l  
         #print("Loss = " + str(loss))
         self.update_counter += 1        
@@ -264,12 +261,13 @@ class Ctrl_naf(QNetwork):
         return self.V(states_val)
 
 
-    def chooseBestAction(self, state):
+    def chooseBestAction(self, state, noisy=False):
         """ Get the best action for a belief state
 
         Arguments
         ---------
         state : one belief state
+        noisy : whether if the output is noised by the nn architecture
 
         Returns
         -------
@@ -278,10 +276,15 @@ class Ctrl_naf(QNetwork):
 
         s = [np.expand_dims(s,axis=0) for s in state]
         mus = self.mu(s)
-        u = mus[0][0]
-        s.append(mus[0])
+        u = mus[0]
+        if noisy:
+            u = self.noisymu(s)[0]
+        else:
+            u = self.mu(s)[0]
+        s.append(u)
         q = self.Q(s)
-        return u,q
+        #print(q)
+        return u[0],q
 
     def evalAction(self, state, action):
         """ Evaluate an action
@@ -330,11 +333,11 @@ class Ctrl_naf(QNetwork):
             raise Exception('The update_rule '+self._update_rule+' is not implemented.')
         if loss is None:
             loss = self._loss
-        self.q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(**lkwargs))
+        self.q_naf.compile(optimizer=optimizer, loss=loss)
         #self.next_q_naf.compile(optimizer=optimizer, loss=loss if isinstance(loss,str) else loss(*args,**kwargs))
     def _resetQHat(self):
         for i,(param,next_param) in enumerate(zip(self.params, self.next_params)):
             K.set_value(next_param,K.get_value(param))
 
-        self._compile(weighted_mse_kl_divergence,old_q=self.naf_components["oldQ"]) # recompile to take into account new optimizer parameters that may have changed since
+        self._compile(loss=self.loss) # recompile to take into account new optimizer parameters that may have changed since
                         # self._compile() was called in __init__. FIXME: this call should ideally be done elsewhere

@@ -30,8 +30,11 @@ PI = np.pi
 N_TAU=10
 DELTA_T=0.02
 
+def rescale(x,oldmax,oldmin,newmax,newmin):
+    return ((newmax - newmin)/(oldmax-oldmin)) * (x-oldmax) + newmax
+
 class Cartpole(Environment):
-    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,min_f=-10,max_f=10,r=0,s=5,stepsize=20):
+    def __init__(self, rng, g=9.8,m_cart=1.0,m_pole=0.1,l=0.5,min_f=-10,max_f=10,r=0,s=5,stepsize=20,number_init_states=10):
         """ Initialize environment.
 
         Arguments:
@@ -56,7 +59,8 @@ class Cartpole(Environment):
         self._n_actions = [[self.min_f,self.max_f]] if self._continuous else int((self.max_f - self.min_f)/stepsize) + 1
         self.stepsize = stepsize
         self.actions = None
-            
+        self.init_states = {1:None, 0:None}
+        self.n_init_states = number_init_states
            
             
 
@@ -73,13 +77,11 @@ class Cartpole(Environment):
         """
         # Direction of the force
         if self._continuous:
-            force = action[0]
+            force = action[0]#rescale(action[0],1,-1,self.max_f,self.min_f)
         else:
             if self.actions is None:    
                 
                 self.actions = np.arange(self.min_f, self.max_f + self.stepsize, self.stepsize)
-            force = self.actions[action]
-        
         # Divide DELTA_T into smaller tau's, to better take into account
         # the transitions
         n_tau = N_TAU
@@ -110,15 +112,23 @@ class Cartpole(Environment):
                 theta_dot + tau*theta_dd,
                 ]
         
-        # Simple reward
-        reward = - abs(theta) 
-        reward -= abs(self._last_observation[0])/2.
+        
         # The cart cannot move beyond -S or S
         S = float(self.s)
         if(self._last_observation[0]<-S):
             self._last_observation[0]=-S
         if(self._last_observation[0]>S):
             self._last_observation[0]=S
+
+
+        # Simple reward
+        if not self.inTerminalState():
+            reward = - abs(theta) 
+            reward -= abs(self._last_observation[0])/2.
+        else:
+            reward = -500
+        
+
         return reward
 
     def convert_repr(self):
@@ -139,28 +149,37 @@ class Cartpole(Environment):
         Arguments:
             mode - Not used in this example.
         """
-        # Reset initial observation to a random x and theta
-        if mode == -1:
+        if mode != -1:
+            if self.init_states[mode] is None:
+                
+                self.init_states[mode] = []
+                self.idx = {0 : 0, 1 : 0} 
+                # Reset initial observation to a random x and theta
+                if mode == 1:
+                    #Validation set
+                    ranges_x = [(-0.75,-0.5),(0.5,0.75)]
+                    ranges_theta = [(-3*PI/2,-PI/2),(PI/2,3*PI/2)]
+                    
+                else:
+                    #Test set
+                    ranges_x = [(-1,-0.75),(0.75,1)]
+                    ranges_theta = [(-PI,-PI/2),(PI/2,PI)]
+                range_x = ranges_x[self._rng.randint(len(ranges_x))]
+                range_theta = ranges_theta[self._rng.randint(len(ranges_theta))]
+                for _ in range(self.n_init_states):
+                    x = self._rng.uniform(*range_x)
+                    theta = self._rng.uniform(*range_theta)
+                    self.init_states[mode].append((x,theta))
+            
+            x = self._rng.uniform(*self.init_states[mode][self.idx[mode]])
+            theta = self._rng.uniform(*self.init_states[mode][self.idx[mode]])
+            self.idx[mode] = (self.idx[mode] + 1) % self.n_init_states
+            
+        else:
+
             #Learning set 
             x = self._rng.uniform(-0.5, 0.5)
             theta = self._rng.uniform(-PI/2, PI/2)
-        elif mode == 3:
-            x = 0
-            theta = 0.01
-        else:
-            if mode == 1:
-                #Validation set
-                ranges_x = [(-0.75,-0.5),(0.5,0.75)]
-                ranges_theta = [(-3*PI/2,-PI/2),(PI/2,3*PI/2)]
-            else:
-                #Test set
-                ranges_x = [(-1,-0.75),(0.75,1)]
-                ranges_theta = [(-PI,-PI/2),(PI/2,PI)]
-            range_x = ranges_x[self._rng.randint(len(ranges_x))]
-            range_theta = ranges_theta[self._rng.randint(len(ranges_theta))]
-            
-            x = self._rng.uniform(*range_x)
-            theta = self._rng.uniform(*range_theta)
             
         self._last_observation = [x, 0, theta, 0]
         return self._last_observation
@@ -198,6 +217,9 @@ class Cartpole(Environment):
             angle = -(2*PI - angle)
 
         return angle
+
+    def inTerminalState(self):
+        return np.any(self._last_observation == np.nan)
 
     def inputDimensions(self):
         return self._input_dim  

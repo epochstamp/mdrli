@@ -28,7 +28,7 @@ class QNetwork(object):
         """
         raise NotImplementedError()
 
-    def chooseBestAction(self, state):
+    def chooseBestAction(self, state,**kwargs):
         """ Get the best action for a belief state
         """        
         raise NotImplementedError()
